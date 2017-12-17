@@ -1,10 +1,13 @@
 import sbt.Keys._
 
-lazy val commonSettings = Seq(
+lazy val scalaSetup = Seq(
   scalaVersion := "2.12.4",
   version := "0.1-SNAPSHOT",
   organization := "scalavision",
   scalacOptions in Test ++= Seq("-Yrangepos"),
+)
+
+lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
      "co.fs2" %% "fs2-core" % "0.10.0-M9",
      "co.fs2" %% "fs2-io" % "0.10.0-M9",
@@ -17,10 +20,26 @@ lazy val commonSettings = Seq(
    )
 )
 
-lazy val IWebDevServer = project.in(file("IWebDevServer"))
+lazy val IWebDevLib = project.in(file("IWebDevLib"))
+  .settings(scalaSetup :_*)
   .settings(commonSettings :_*)
 
+lazy val IWebDevServer = project.in(file("IWebDevServer"))
+  .settings(scalaSetup :_*)
+  .settings(commonSettings :_*)
+
+lazy val IWebDevClient = project.in(file("IWebDevClient"))
+  .settings(scalaSetup :_*)
+  .settings(
+      libraryDependencies ++= Seq(
+        "com.github.benhutchison" %%% "prickle" % "1.1.13",
+        "org.scala-js" %%% "scalajs-dom" % "0.9.1",
+      )
+  )
+  .enablePlugins(ScalaJSPlugin)
+
 lazy val IWebDevPlugin = project.in(file("IWebDevPlugin"))
+  .settings(scalaSetup :_*)
   .settings(commonSettings :_*)
   .settings(
     sbtPlugin := true,

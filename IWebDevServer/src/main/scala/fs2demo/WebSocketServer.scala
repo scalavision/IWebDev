@@ -18,7 +18,8 @@ import scodec.codecs._
 
 class WebSocketServer(
   clientData: Queue[IO, String],
-  styleSheets: Queue[IO, StyleSheet]
+  styleSheets: Queue[IO, StyleSheet],
+  js: Queue[IO, String]
 ) {
 
   implicit val codecString: Codec[String] = utf8
@@ -29,10 +30,13 @@ class WebSocketServer(
     }
   }
 
+  // TODO: Next, See if we can somehow push both javascript and css from two different queues
   val requestHandler: Pipe[IO, Frame[String], Frame[String]] =  { in =>
-    in.flatMap { s =>
+    in.flatMap { fromClient =>
         styleSheets.dequeue.through(log("pushed"))
           .flatMap(s => Stream.eval(IO { Frame.Text(Pickle.intoString(s)) }))
+//      merge
+//            js.dequeue.flatMap(s => Stream.eval(IO {Frame.Text(s)}))
     }
   }
 

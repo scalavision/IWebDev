@@ -4,6 +4,9 @@ import cats.effect.IO
 import fs2demo.CssSerializer.StyleSheet
 import Resources._
 import fs2._
+import fs2.async.mutable.Queue
+
+
 
 object Program {
 
@@ -13,7 +16,7 @@ object Program {
     }
   }
 
-  val cssProgram: Stream[IO, Unit] = for {
+  def cssProgram(js: Queue[IO, String]): Stream[IO, Unit] = for {
 
     fromCss4sQ <- Stream.eval(async.topic[IO, StyleSheet](StyleSheet.create("")))
     fromNodeJSQ <- Stream.eval(async.boundedQueue[IO, StyleSheet](100))
@@ -21,7 +24,7 @@ object Program {
 
     css4sServer = new Css4sServer(fromCss4sQ)
     nodeJSClient = new NodeJSClient(fromCss4sQ, fromNodeJSQ)
-    webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ)
+    webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ, js)
 
     cssProcessor <-  Stream(
       css4sServer.css4sIn,

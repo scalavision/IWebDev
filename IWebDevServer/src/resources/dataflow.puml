@@ -1,0 +1,10 @@
+@startuml
+(*)  --> "Css4s"
+"Css4s" -> "WebServer"
+"WebServer" -> "Node"
+"Node" -> WebServer
+
+"WebClient" ---> "WebServer"
+"WebServer" -> "WebClient"
+
+@enduml

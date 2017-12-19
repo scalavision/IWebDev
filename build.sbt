@@ -1,4 +1,5 @@
 import sbt.Keys._
+import sbtcrossproject.{crossProject, CrossType}
 
 lazy val scalaSetup = Seq(
   scalaVersion := "2.12.4",
@@ -14,21 +15,50 @@ lazy val commonSettings = Seq(
      "com.spinoco" %% "fs2-http" % "0.3.0-SNAPSHOT",
      "org.scodec" %% "scodec-bits" % "1.1.5",
      "org.scodec" %% "scodec-core" % "1.10.3",
-     "com.github.benhutchison" %%% "prickle" % "1.1.13",
+     "com.github.benhutchison" %% "prickle" % "1.1.13",
      "org.scodec" %% "scodec-stream" % "1.1.0-M9",
      "org.specs2" %% "specs2-core" % "4.0.0" % "test"
    )
 )
 
-lazy val IWebDevLib = project.in(file("IWebDevLib"))
+lazy val LibSettings = Seq(
+  scalaVersion := "2.12.4"
+)
+
+//lazy val ILib = project.in(file("ILib"))
+//  .crossProject(JSPlatform, JVMPlatform)
+lazy val ILib = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure) in file("ILib"))
+  .settings(scalaSetup :_*)
+  
+
+lazy val ILibJS = ILib.js
+lazy val ILibJVM = ILib.jvm
+
+lazy val ICodec = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure) in file("ICodec"))
+  .settings(scalaSetup :_*)
+  .jsSettings(
+    libraryDependencies ++= Seq(
+     "org.scodec" %%% "scodec-bits" % "1.1.5",
+     "org.scodec" %%% "scodec-core" % "1.10.3",
+     "com.github.benhutchison" %%% "prickle" % "1.1.13"
+   ))
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "org.scodec" %% "scodec-bits" % "1.1.5",
+      "org.scodec" %% "scodec-core" % "1.10.3",
+      "com.github.benhutchison" %% "prickle" % "1.1.13"
+    ))
+  .dependsOn(ILib)
+
+
+lazy val ICodecJS = ICodec.js
+lazy val ICodecJVM = ICodec.jvm
+
+lazy val IServer = project.in(file("IServer"))
   .settings(scalaSetup :_*)
   .settings(commonSettings :_*)
 
-lazy val IWebDevServer = project.in(file("IWebDevServer"))
-  .settings(scalaSetup :_*)
-  .settings(commonSettings :_*)
-
-lazy val IWebDevClient = project.in(file("IWebDevClient"))
+lazy val IClient = project.in(file("IClient"))
   .settings(scalaSetup :_*)
   .settings(
       libraryDependencies ++= Seq(
@@ -36,16 +66,17 @@ lazy val IWebDevClient = project.in(file("IWebDevClient"))
         "org.scala-js" %%% "scalajs-dom" % "0.9.1",
       )
   )
+  .dependsOn(ICodecJS)
   .enablePlugins(ScalaJSPlugin)
 
-lazy val IWebDevPlugin = project.in(file("IWebDevPlugin"))
+lazy val IPlugin = project.in(file("IPlugin"))
   .settings(scalaSetup :_*)
   .settings(commonSettings :_*)
   .settings(
     sbtPlugin := true,
     addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.21")
   )
-  .dependsOn(IWebDevServer)
+  .dependsOn(IServer, ILibJVM, ICodecJVM)
 
 lazy val root = project.in(file("."))
-  .aggregate(IWebDevServer, IWebDevPlugin)
+  .aggregate(IServer, IPlugin, ILibJVM, ICodecJVM, IClient)

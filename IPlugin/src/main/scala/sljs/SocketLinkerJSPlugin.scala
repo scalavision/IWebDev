@@ -4,6 +4,7 @@ import cats.effect.IO
 import fs2demo.Program
 import fs2._
 import fs2demo.CssSerializer.StyleSheet
+import iwebdev.codec.InfoCodec
 import org.scalajs.core.tools.linker
 import linker.StandardLinker
 import org.scalajs.core.tools.io.WritableMemVirtualJSFile
@@ -21,54 +22,64 @@ object SocketLinkerJSPlugin extends AutoPlugin {
   )
 
   object autoImport {
-    val pushJS = taskKey[Unit]("Test the plugin actually works")
-    val startDevServer = taskKey[Unit]("Start the dev server")
+    val outputJSPath = settingKey[String]("Output path of the Javascript file")
+    val saveJS = taskKey[Unit]("Save compiled javascript client to path")
+    val pushToClient = taskKey[Unit]("Push compiled javascript to client")
+    val startDevServer = taskKey[Unit]("Start the instant webdev server")
   }
 
   import autoImport._
   import ScalaJSPlugin.AutoImport._
 
-  val jsQueue = Stream.eval(async.boundedQueue(100)[IO, String])
+  implicit val serializer  = InfoCodec.infoCodec
+
 
   val sljsSettings = Seq(
-    pushJS := {
-      println("Pushing JS")
+    outputJSPath := "test.js",
+    saveJS := {
 
       val irFiles = (scalaJSIR in Compile).value
-
       val modules = scalaJSModuleInitializers.value
-      println("modules: " + modules.mkString("\n"))
-
-      println("trying to run the linker:")
-
       val output = WritableMemVirtualJSFile.apply("test")
 
-      linker.link(
+      def link() = linker.link(
         irFiles.data,
         modules,
         output,
         new ScalaConsoleLogger()
       )
 
+
+      println("Linking JS")
+      link()
+      sbt.IO.write(
+        new java.io.File(outputJSPath.value),
+        output.content,
+        java.nio.charset.StandardCharsets.UTF_8
+      )
+    },
+    pushToClient := {
+
+      val irFiles = (scalaJSIR in Compile).value
+      val modules = scalaJSModuleInitializers.value
+      val output = WritableMemVirtualJSFile.apply("test")
+
+      def link() = linker.link(
+        irFiles.data,
+        modules,
+        output,
+        new ScalaConsoleLogger()
+      )
+
+
+      println("Linking JS")
+      link()
       println("the linker was run!")
       println(output.content)
 
-      val in = for {
-        q <- jsQueue
-        p = q.enqueue(Stream.emit(output.content))
-      } yield p
-
-      in.run.unsafeRunSync()
-
     },
     startDevServer := {
-
-    val out  =  for {
-        q <- jsQueue
-        p = Program.cssProgram(q)
-      } yield p
-
-      out.run.unsafeRunSync()
+      Program.cssProgram.run.unsafeRunSync()
     }
 
   )

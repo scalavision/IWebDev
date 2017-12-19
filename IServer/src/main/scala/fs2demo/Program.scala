@@ -16,7 +16,7 @@ object Program {
     }
   }
 
-  def cssProgram(js: Queue[IO, String]): Stream[IO, Unit] = for {
+  def cssProgram: Stream[IO, Unit] = for {
 
     fromCss4sQ <- Stream.eval(async.topic[IO, StyleSheet](StyleSheet.create("")))
     fromNodeJSQ <- Stream.eval(async.boundedQueue[IO, StyleSheet](100))
@@ -24,7 +24,7 @@ object Program {
 
     css4sServer = new Css4sServer(fromCss4sQ)
     nodeJSClient = new NodeJSClient(fromCss4sQ, fromNodeJSQ)
-    webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ, js)
+    webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ)
 
     cssProcessor <-  Stream(
       css4sServer.css4sIn,

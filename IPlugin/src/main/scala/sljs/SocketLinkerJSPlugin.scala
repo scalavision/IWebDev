@@ -1,16 +1,23 @@
 package sljs
 
+import java.io.{File, PrintStream}
+import java.net.{InetAddress, Socket}
+
 import cats.effect.IO
 import fs2demo.Program
 import fs2._
 import fs2demo.CssSerializer.StyleSheet
 import iwebdev.codec.InfoCodec
+import iwebdev.model.WebDev
 import org.scalajs.core.tools.linker
 import linker.StandardLinker
 import org.scalajs.core.tools.io.WritableMemVirtualJSFile
 import org.scalajs.core.tools.logging.ScalaConsoleLogger
 import sbt._
+import sbt.Keys
 import org.scalajs.sbtplugin.ScalaJSPlugin
+
+import scala.io.BufferedSource
 
 object SocketLinkerJSPlugin extends AutoPlugin {
   override def requires = ScalaJSPlugin
@@ -22,7 +29,8 @@ object SocketLinkerJSPlugin extends AutoPlugin {
   )
 
   object autoImport {
-    val outputJSPath = settingKey[String]("Output path of the Javascript file")
+    val outputJSPath = settingKey[File]("Output path of the Javascript file")
+    val outputJSFilename = settingKey[String]("Output path of the Javascript file")
     val saveJS = taskKey[Unit]("Save compiled javascript client to path")
     val pushToClient = taskKey[Unit]("Push compiled javascript to client")
     val startDevServer = taskKey[Unit]("Start the instant webdev server")
@@ -30,12 +38,15 @@ object SocketLinkerJSPlugin extends AutoPlugin {
 
   import autoImport._
   import ScalaJSPlugin.AutoImport._
+  import sbt.IO._
 
   implicit val serializer  = InfoCodec.infoCodec
 
-
   val sljsSettings = Seq(
-    outputJSPath := "test.js",
+    outputJSPath := new java.io.File("."),
+    outputJSFilename := {
+      Keys.name.value
+    },
     saveJS := {
 
       val irFiles = (scalaJSIR in Compile).value
@@ -48,12 +59,12 @@ object SocketLinkerJSPlugin extends AutoPlugin {
         output,
         new ScalaConsoleLogger()
       )
-
-
       println("Linking JS")
+
       link()
+
       sbt.IO.write(
-        new java.io.File(outputJSPath.value),
+        outputJSPath.value /  outputJSFilename.value,
         output.content,
         java.nio.charset.StandardCharsets.UTF_8
       )
@@ -70,6 +81,32 @@ object SocketLinkerJSPlugin extends AutoPlugin {
         output,
         new ScalaConsoleLogger()
       )
+
+      val s = new Socket(InetAddress.getByName("localhost"), 6000)
+      lazy val in = new BufferedSource(s.getInputStream()).getLines()
+      val out = new PrintStream(s.getOutputStream())
+
+      val filePath = outputJSPath.value / outputJSFilename.value
+
+      val packet = WebDev.createInfo(
+        sbt.Keys.name.value,
+        filePath.getAbsolutePath,
+        output.content,
+        WebDev.JS
+      )
+
+      out.write(
+        serializer.encode(packet).require.toByteArray
+      )
+      out.flush()
+
+      Thread.sleep(1000)
+      s.getInputStream.close()
+
+      out.close()
+      s.close()
+
+      println("everything has beens shutdown and resources are destroyed")
 
 
       println("Linking JS")

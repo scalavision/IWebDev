@@ -1,17 +1,18 @@
-package fs2demo
+package iwebdev.server
 
 import java.net.{InetAddress, InetSocketAddress}
 
 import cats.effect.IO
-import fs2.{Chunk, Pipe, Stream, async}
-import fs2.async.mutable.{Queue, Topic}
+import fs2.async.mutable.Topic
 import fs2.io.tcp.serverWithLocalAddress
-import Resources._
-import fs2demo.CssSerializer.StyleSheet
+import fs2.{Chunk, Pipe, Stream, async}
+import iwebdev.model.WebDev
 import scodec.bits.BitVector
 import scodec.stream.toLazyBitVector
+import Resources._
+import iwebdev.model.WebDev.Info
 
-class Css4sServer(topic: Topic[IO, StyleSheet]) {
+class Css4sServer(topic: Topic[IO, Info]) {
 
   val localBindAddress = async.promise[IO, InetSocketAddress].unsafeRunSync()
 
@@ -21,21 +22,22 @@ class Css4sServer(topic: Topic[IO, StyleSheet]) {
     }
   }
 
-  val showStyle: Pipe[IO, StyleSheet, StyleSheet] = _.evalMap { bb =>
+  val showStyle: Pipe[IO, WebDev.Info, WebDev.Info] = _.evalMap { bb =>
     IO {
       println("Css4s Style: "); println(bb.content); bb
     }
   }
 
-  val extractBytes: Pipe[IO, Array[Byte], StyleSheet] = s => CssDecoder.streamDecoder.decode[IO] {
+  val extractBytes: Pipe[IO, Array[Byte], WebDev.Info] = s => InfoDecoder.streamDecoder.decode[IO] {
     toLazyBitVector {
       s.map { bb => BitVector.apply(bb) }
     }
   }
 
+  /*
   var cache: Map[String, Int] = Map()
 
-  val hasChanged: Pipe[IO, StyleSheet, StyleSheet] = _.evalMap { s =>
+  val hasChanged: Pipe[IO, WebDev.Info, WebDev.Info] = _.evalMap { s =>
     IO {
       cache.get(s.id).fold({
         println("new stylesheet!")
@@ -43,7 +45,7 @@ class Css4sServer(topic: Topic[IO, StyleSheet]) {
       }) { old =>
         if(old == s.contentHash) {
           println("style sheet has not changed!")
-          StyleSheet(s.id, old, "")
+          WebDev(s.id, old, "")
         }
         else {
           println("stylesheet has changed!")
@@ -51,11 +53,11 @@ class Css4sServer(topic: Topic[IO, StyleSheet]) {
         }
       }
     }
-  }
+  }*/
 
 
   val css4sIn: Stream[IO, Unit] =
-    serverWithLocalAddress[IO](new InetSocketAddress(InetAddress.getByName(null), 6000)).flatMap {
+    serverWithLocalAddress[IO](new InetSocketAddress(InetAddress.getByName(null), 9004)).flatMap {
       case Left(local) =>
         println("binding .." + local)
         Stream.eval_(localBindAddress.complete(local))

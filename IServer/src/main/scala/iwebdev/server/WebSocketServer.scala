@@ -1,29 +1,29 @@
-package fs2demo
+package iwebdev.server
 
-
-import java.net.{InetSocketAddress}
+import java.net.InetSocketAddress
 
 import cats.effect.IO
-import fs2.{Pipe, Stream}
 import fs2.async.mutable.Queue
-import Resources._
-import fs2demo.CssSerializer.StyleSheet
+import fs2.{Pipe, Stream}
 import prickle._
+import scodec.Codec
+import scodec.codecs._
 import spinoco.fs2.http
 import spinoco.fs2.http.websocket
 import spinoco.fs2.http.websocket.Frame
+import Resources._
+
 import scala.concurrent.duration._
-import scodec.Codec
-import scodec.codecs._
+import iwebdev.model.WebDev.Info
 
 class WebSocketServer(
   clientData: Queue[IO, String],
-  styleSheets: Queue[IO, StyleSheet]
+  styleSheets: Queue[IO, Info]
 ) {
 
   implicit val codecString: Codec[String] = utf8
 
-  private def log(prefix: String): Pipe[IO, StyleSheet, StyleSheet] = _.evalMap { s =>
+  private def log(prefix: String): Pipe[IO, Info, Info] = _.evalMap { s =>
     IO {
       println(s"$prefix " + s);s
     }

@@ -4,11 +4,10 @@ import java.io.{File, PrintStream}
 import java.net.{InetAddress, Socket}
 
 import cats.effect.IO
-import fs2demo.Program
 import fs2._
-import fs2demo.CssSerializer.StyleSheet
 import iwebdev.codec.InfoCodec
 import iwebdev.model.WebDev
+import iwebdev.server.Program
 import org.scalajs.core.tools.linker
 import linker.StandardLinker
 import org.scalajs.core.tools.io.WritableMemVirtualJSFile
@@ -19,7 +18,7 @@ import org.scalajs.sbtplugin.ScalaJSPlugin
 
 import scala.io.BufferedSource
 
-object SocketLinkerJSPlugin extends AutoPlugin {
+object IWebDevPlugin extends AutoPlugin {
   override def requires = ScalaJSPlugin
 
   val linker = StandardLinker.apply(
@@ -38,7 +37,6 @@ object SocketLinkerJSPlugin extends AutoPlugin {
 
   import autoImport._
   import ScalaJSPlugin.AutoImport._
-  import sbt.IO._
 
   implicit val serializer  = InfoCodec.infoCodec
 

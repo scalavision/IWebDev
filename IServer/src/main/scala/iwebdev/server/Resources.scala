@@ -1,4 +1,4 @@
-package fs2demo
+package iwebdev.server
 
 import java.lang.Thread.UncaughtExceptionHandler
 import java.nio.channels.AsynchronousChannelGroup

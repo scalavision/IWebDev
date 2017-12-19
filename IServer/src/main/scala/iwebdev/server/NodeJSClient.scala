@@ -1,23 +1,23 @@
-package fs2demo
+package iwebdev.server
 
-import java.net.{InetSocketAddress}
+import java.net.InetSocketAddress
 
 import cats.effect.IO
-import fs2.{Segment, Sink, Stream, async, text}
 import fs2.async.mutable.{Queue, Topic}
-import Resources._
-import fs2.async.Promise
 import fs2.interop.scodec.ByteVectorChunk
 import fs2.io.tcp
-import fs2demo.CssSerializer.StyleSheet
-import scodec.bits.{ByteVector}
+import fs2.{Segment, Sink, Stream, async, text}
+import scodec.bits.ByteVector
+import iwebdev.model.WebDev
+import iwebdev.model.WebDev.Info
+import Resources._
 
-class NodeJSClient (in: Topic[IO, StyleSheet], out: Queue[IO, StyleSheet]) {
+class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
 
   val localBindAddress =
     async.promise[IO, InetSocketAddress].unsafeRunSync()
 
-  val log: Sink[IO, StyleSheet] = _.evalMap { s =>
+  val log: Sink[IO, Info] = _.evalMap { s =>
     IO {
       println("postProcessed: ")
     }
@@ -47,10 +47,14 @@ class NodeJSClient (in: Topic[IO, StyleSheet], out: Queue[IO, StyleSheet]) {
         val oldSheet = t._2
         Stream.eval( IO {
 
-          StyleSheet(oldSheet.id,
-            postProcessedSheet.hashCode,
-            postProcessedSheet)
-        } ).to(out.enqueue).drain
+          WebDev.createInfo(
+            oldSheet.id,
+            oldSheet.outputPath,
+            postProcessedSheet,
+            WebDev.CSS
+          )
+
+        }).to(out.enqueue).drain
 
       }.to(log).drain
     }

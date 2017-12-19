@@ -1,4 +1,4 @@
-package fs2demo
+package iwebdev.server
 
 import fs2.{Chunk, Pipe, Pull, Stream}
 

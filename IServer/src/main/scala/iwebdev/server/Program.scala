@@ -1,16 +1,15 @@
-package fs2demo
+package iwebdev.server
 
 import cats.effect.IO
-import fs2demo.CssSerializer.StyleSheet
-import Resources._
 import fs2._
-import fs2.async.mutable.Queue
-
+import iwebdev.model.WebDev
+import Resources._
+import iwebdev.model.WebDev.Info
 
 
 object Program {
 
-  private def log(prefix: String): Pipe[IO, StyleSheet, StyleSheet] = _.evalMap { s =>
+  private def log(prefix: String): Pipe[IO, Info, Info] = _.evalMap { s =>
     IO {
       println(s"$prefix " + s);s
     }
@@ -18,8 +17,8 @@ object Program {
 
   def cssProgram: Stream[IO, Unit] = for {
 
-    fromCss4sQ <- Stream.eval(async.topic[IO, StyleSheet](StyleSheet.create("")))
-    fromNodeJSQ <- Stream.eval(async.boundedQueue[IO, StyleSheet](100))
+    fromCss4sQ <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
+    fromNodeJSQ <- Stream.eval(async.boundedQueue[IO, Info](100))
     clientStream <- Stream.eval(async.boundedQueue[IO, String](100))
 
     css4sServer = new Css4sServer(fromCss4sQ)

@@ -1,4 +1,4 @@
-package fs2demo
+package iwebdev.server
 
 object StylesheetSample {
 

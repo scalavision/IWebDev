@@ -8,6 +8,7 @@ object WebDev {
   type InfoType = String
   val JS: InfoType = "JS"
   val CSS: InfoType = "CSS"
+  val INIT: InfoType = "INIT"
 
   case class Info(
     id: String,
@@ -29,6 +30,10 @@ object WebDev {
     hash: Int,
     outputPath: String,
     content: String
+  )
+
+  def createInit = Info(
+    "", INIT, -1, "", ""
   )
 
   def createInfo(

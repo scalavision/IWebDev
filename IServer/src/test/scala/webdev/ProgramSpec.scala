@@ -1,4 +1,4 @@
-package fs2demo
+package webdev
 
 import java.net.InetSocketAddress
 import java.net.InetAddress
@@ -14,10 +14,13 @@ import org.specs2.specification.BeforeAfterAll
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.immutable
-import CssSerializer.StyleSheet
+import iwebdev.server.CssSerializer.StyleSheet
 import scodec.bits.{BitVector, ByteVector}
 import fs2.interop.scodec.ByteVectorChunk
 import java.util.concurrent.TimeUnit
+
+import iwebdev.server.{Program, Resources}
+import webdev.server.Program
 
 class ProgramSpec extends org.specs2.mutable.Specification with BeforeAfterAll {
 

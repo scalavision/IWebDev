@@ -1,13 +1,12 @@
-package fs2demo
+package iwebdev.server
 
 import cats.effect.IO
 import fs2.Pipe
-import scodec.{Attempt, Codec, DecodeResult}
-import scodec.codecs._
+import iwebdev.model.WebDev
 import scodec.bits._
-import scodec.codecs.implicits._
+import scodec.codecs._
 import scodec.stream.{StreamDecoder, StreamEncoder, decode, encode}
-
+import scodec.{Attempt, Codec, DecodeResult}
 
 object CssSerializer {
 
@@ -42,42 +41,14 @@ object CssSerializer {
 
   }
 
-  case class StyleSheet(
-    id: String,
-    contentHash: Int,
-    content: String
-  )
-
-  object StyleSheet {
-
-    def create(css: String) = {
-      StyleSheet(
-        "DemoCss",
-        css.hashCode(),
-        css
-      )
-    }
-
-    def enc(css: String): Attempt[BitVector] =
-      stylesheetCodec.encode(create(css))
-
-    def dec(bitVector: BitVector): Attempt[DecodeResult[StyleSheet]] =
-      stylesheetCodec.decode(bitVector)
-
-  }
-
-  val stylesheetCodec: Codec[StyleSheet] = {
-    utf8_32 :: int32 :: utf8_32
-  }.as[StyleSheet]
-
 }
 
-object CssDecoder {
-  import CssSerializer._
-  val streamDecoder: StreamDecoder[StyleSheet] = decode.many(stylesheetCodec)
+object InfoDecoder {
+  import iwebdev.codec.InfoCodec._
+  val streamDecoder: StreamDecoder[WebDev.Info] = decode.many(infoCodec)
 }
 
-object CssEncoder {
-  import CssSerializer._
-  val streamEncoder: StreamEncoder[StyleSheet] = encode.many(stylesheetCodec)
+object InfoEncoder {
+  import iwebdev.codec.InfoCodec._
+  val streamEncoder: StreamEncoder[WebDev.Info] = encode.many(infoCodec)
 }

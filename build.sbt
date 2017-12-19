@@ -57,6 +57,8 @@ lazy val ICodecJVM = ICodec.jvm
 lazy val IServer = project.in(file("IServer"))
   .settings(scalaSetup :_*)
   .settings(commonSettings :_*)
+  .dependsOn(ILibJVM, ICodecJVM)
+
 
 lazy val IClient = project.in(file("IClient"))
   .settings(scalaSetup :_*)
@@ -79,4 +81,4 @@ lazy val IPlugin = project.in(file("IPlugin"))
   .dependsOn(IServer, ILibJVM, ICodecJVM)
 
 lazy val root = project.in(file("."))
-  .aggregate(IServer, IPlugin, ILibJVM, ICodecJVM, IClient)
+  .aggregate(IServer, IPlugin, ILibJVM, ILibJS, ICodecJVM, ICodecJS, IClient)

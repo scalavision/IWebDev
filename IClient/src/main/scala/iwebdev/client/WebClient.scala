@@ -1,12 +1,11 @@
-package client
-
-import org.scalajs.dom
-import org.scalajs.dom.{Blob, Event, MessageEvent, WebSocket}
-import prickle.Unpickle
+package iwebdev.client
 
 object WebClient {
+
   def main(args: Array[String]): Unit = {
+    println("starting up ...")
     val webSocketClient = new WebSocketClient()
     webSocketClient.run()
   }
+
 }

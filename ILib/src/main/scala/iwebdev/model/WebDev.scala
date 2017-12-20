@@ -18,19 +18,21 @@ object WebDev {
     content: String
   )
 
+  sealed trait ReplaceInfo
+
   case class Js(
     id: String,
     hash: Int,
     outputPath: String,
     content: String
-  )
+  ) extends ReplaceInfo
 
   case class Css(
     id: String,
     hash: Int,
     outputPath: String,
     content: String
-  )
+  ) extends ReplaceInfo
 
   def createInit = Info(
     "", INIT, -1, "", ""

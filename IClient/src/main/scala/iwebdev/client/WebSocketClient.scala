@@ -8,12 +8,9 @@ import org.scalajs.dom.raw.HTMLStyleElement
 import org.scalajs.dom.{Blob, WebSocket}
 import prickle.Unpickle
 
-case class StyleSheet(
-  id: String,
-  contentHash: Int,
-  content: String
-)
+import scala.scalajs.js.annotation.JSExportAll
 
+@JSExportAll
 class WebSocketClient {
 
   val socket = new WebSocket("ws://127.0.0.1:9092")

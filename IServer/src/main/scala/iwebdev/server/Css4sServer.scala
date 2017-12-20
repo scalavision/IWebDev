@@ -12,6 +12,7 @@ import scodec.stream.toLazyBitVector
 import Resources._
 import iwebdev.model.WebDev.Info
 
+// TODO: Create a separate server for javascript
 class Css4sServer(topic: Topic[IO, Info]) {
 
   val localBindAddress = async.promise[IO, InetSocketAddress].unsafeRunSync()
@@ -33,7 +34,6 @@ class Css4sServer(topic: Topic[IO, Info]) {
       s.map { bb => BitVector.apply(bb) }
     }
   }
-
 
   val css4sIn: Stream[IO, Unit] =
     serverWithLocalAddress[IO](new InetSocketAddress(InetAddress.getByName(null), 6000)).flatMap {

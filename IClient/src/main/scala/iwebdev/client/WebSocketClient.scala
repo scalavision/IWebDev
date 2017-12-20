@@ -1,11 +1,12 @@
-package client
+package iwebdev.client
 
-import client.css.CssRenderer
+import iwebdev.client.renderer.{CssRenderer, JsRenderer}
+import iwebdev.model.WebDev
+import iwebdev.model.WebDev.{Info, ReplaceInfo}
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLStyleElement
 import org.scalajs.dom.{Blob, WebSocket}
 import prickle.Unpickle
-import CssRenderer._
 
 case class StyleSheet(
   id: String,
@@ -19,6 +20,8 @@ class WebSocketClient {
 
   def run() = {
 
+    println("running ...")
+
     def sendMessage(msg: String) = {
       socket.send(msg)
     }
@@ -30,6 +33,17 @@ class WebSocketClient {
 
     }
 
+    def replaceNode(info: ReplaceInfo): Unit = info match {
+        case j: WebDev.Js =>
+          println("js")
+          JsRenderer.render(j)
+        case c: WebDev.Css =>
+          println("css")
+          CssRenderer.render(c)
+        case _ =>
+          throw new Exception("ERROR: something was utterly wrong ...")
+      }
+
     socket.onmessage = { (e: dom.MessageEvent) =>
 
       println("received a message")
@@ -37,20 +51,12 @@ class WebSocketClient {
       e.data match {
         case s : String =>
 
-          val styleSheet = Unpickle[StyleSheet].fromString(s).get
+          val info = Unpickle[Info].fromString(s).get
 
-          val node = dom.document.getElementById(styleSheet.id)
+          println("we got this: ")
+          println(info)
 
-          if(null != node) {
-            val pNode = node.parentNode
-            while(pNode.hasChildNodes()){
-              pNode.removeChild(pNode.firstChild)
-            }
-          }
-
-          installStyle(
-            createStyleElement(styleSheet)
-          )
+          replaceNode(WebDev(info))
 
         case b: Blob =>
           println("undefined result : " + e.data)

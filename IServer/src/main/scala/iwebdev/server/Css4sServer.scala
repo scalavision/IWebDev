@@ -34,30 +34,9 @@ class Css4sServer(topic: Topic[IO, Info]) {
     }
   }
 
-  /*
-  var cache: Map[String, Int] = Map()
-
-  val hasChanged: Pipe[IO, WebDev.Info, WebDev.Info] = _.evalMap { s =>
-    IO {
-      cache.get(s.id).fold({
-        println("new stylesheet!")
-        cache += s.id -> s.contentHash; s
-      }) { old =>
-        if(old == s.contentHash) {
-          println("style sheet has not changed!")
-          WebDev(s.id, old, "")
-        }
-        else {
-          println("stylesheet has changed!")
-          cache += s.id -> s.contentHash; s
-        }
-      }
-    }
-  }*/
-
 
   val css4sIn: Stream[IO, Unit] =
-    serverWithLocalAddress[IO](new InetSocketAddress(InetAddress.getByName(null), 9004)).flatMap {
+    serverWithLocalAddress[IO](new InetSocketAddress(InetAddress.getByName(null), 6000)).flatMap {
       case Left(local) =>
         println("binding .." + local)
         Stream.eval_(localBindAddress.complete(local))
@@ -68,8 +47,30 @@ class Css4sServer(topic: Topic[IO, Info]) {
           // through(hasChanged).filter(_.content.isEmpty) // used as a simple cache not to process already existing stylesheets ...
 
           socket.reads(1024).chunks.map(_.toArray).through(extractBytes).to(topic.publish) ++
-            Stream.chunk(Chunk.bytes("Received StyleSheet".getBytes)).covary[IO].to(socket.writes()).drain.onFinalize(socket.endOfOutput)
+            Stream.chunk(Chunk.bytes("Received Data".getBytes)).covary[IO].to(socket.writes()).drain.onFinalize(socket.endOfOutput)
         }
     }.joinUnbounded
 
 }
+
+
+/*
+var cache: Map[String, Int] = Map()
+
+val hasChanged: Pipe[IO, WebDev.Info, WebDev.Info] = _.evalMap { s =>
+  IO {
+    cache.get(s.id).fold({
+      println("new stylesheet!")
+      cache += s.id -> s.contentHash; s
+    }) { old =>
+      if(old == s.contentHash) {
+        println("style sheet has not changed!")
+        WebDev(s.id, old, "")
+      }
+      else {
+        println("stylesheet has changed!")
+        cache += s.id -> s.contentHash; s
+      }
+    }
+  }
+}*/

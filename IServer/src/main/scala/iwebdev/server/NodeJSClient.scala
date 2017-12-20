@@ -32,6 +32,7 @@ class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
 
       in.subscribe(100).filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS).flatMap { s =>
 
+        println("subscribed from topic, first time: " + s)
         Stream.segment(Segment(s.content))
 
       }.flatMap{ b =>
@@ -41,9 +42,10 @@ class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
       }.to(socket.writes()) merge socket.reads(1024, None)
         .through(text.utf8Decode andThen CssSerializer.splitCssChunks)
         .zip(
-          in.subscribe(100)
+          in.subscribe(1).filter(_.content.nonEmpty)
       ).flatMap { t =>
 
+        println("subsriced from topic, second time: " + t._2)
         val postProcessedSheet = t._1
         val oldSheet = t._2
         Stream.eval( IO {

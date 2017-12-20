@@ -51,6 +51,7 @@ lazy val ICodec = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pur
   .dependsOn(ILib)
 
 
+
 lazy val ICodecJS = ICodec.js
 lazy val ICodecJVM = ICodec.jvm
 
@@ -63,10 +64,11 @@ lazy val IServer = project.in(file("IServer"))
 lazy val IClient = project.in(file("IClient"))
   .settings(scalaSetup :_*)
   .settings(
-      libraryDependencies ++= Seq(
-        "com.github.benhutchison" %%% "prickle" % "1.1.13",
-        "org.scala-js" %%% "scalajs-dom" % "0.9.1",
-      )
+    scalaJSUseMainModuleInitializer := true,
+    libraryDependencies ++= Seq(
+      "com.github.benhutchison" %%% "prickle" % "1.1.13",
+      "org.scala-js" %%% "scalajs-dom" % "0.9.1",
+    )
   )
   .dependsOn(ICodecJS)
   .enablePlugins(ScalaJSPlugin)

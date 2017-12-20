@@ -9,9 +9,9 @@ import iwebdev.model.WebDev.Info
 
 object Program {
 
-  private def log(prefix: String): Pipe[IO, Info, Info] = _.evalMap { s =>
+  private def log(prefix: String): Sink[IO, Info] = _.evalMap { s =>
     IO {
-      println(s"$prefix " + s);s
+      println(s"$prefix " + s)
     }
   }
 
@@ -24,6 +24,8 @@ object Program {
     css4sServer = new Css4sServer(fromCss4sQ)
     nodeJSClient = new NodeJSClient(fromCss4sQ, fromNodeJSQ)
     webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ, fromCss4sQ)
+
+   // _ = fromCss4sQ.subscribe(1).to(log("css")).drain
 
     cssProcessor <-  Stream(
       css4sServer.css4sIn,

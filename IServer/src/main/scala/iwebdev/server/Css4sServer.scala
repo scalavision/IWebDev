@@ -35,7 +35,7 @@ class Css4sServer(topic: Topic[IO, Info]) {
     }
   }
 
-  val css4sIn: Stream[IO, Unit] =
+  val stream: Stream[IO, Unit] =
     serverWithLocalAddress[IO](new InetSocketAddress(InetAddress.getByName(null), 6000)).flatMap {
       case Left(local) =>
         println("binding .." + local)

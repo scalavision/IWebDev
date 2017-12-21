@@ -25,10 +25,8 @@ object Program {
     nodeJSClient = new NodeJSClient(fromCss4sQ, fromNodeJSQ)
     webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ, fromCss4sQ)
 
-   // _ = fromCss4sQ.subscribe(1).to(log("css")).drain
-
     cssProcessor <-  Stream(
-      css4sServer.css4sIn,
+      css4sServer.stream,
       nodeJSClient.stream,
       webSocketServer.stream
     ).join(3)

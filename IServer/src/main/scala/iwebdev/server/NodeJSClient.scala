@@ -6,11 +6,12 @@ import cats.effect.IO
 import fs2.async.mutable.{Queue, Topic}
 import fs2.interop.scodec.ByteVectorChunk
 import fs2.io.tcp
-import fs2.{Chunk, Segment, Sink, Stream, async, text}
+import fs2.{Chunk, Pipe, Segment, Sink, Stream, async, text}
 import scodec.bits.ByteVector
 import iwebdev.model.WebDev
 import iwebdev.model.WebDev.Info
 import Resources._
+import fs2.io.tcp.Socket
 
 class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
 
@@ -57,7 +58,121 @@ class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
       program <- client(oldInfo, nodeJSData, out).drain
     } yield program
 
-  val stream3: Stream[IO, Unit] =
+
+  val p: Pipe[IO, Socket[IO], Socket[IO]] = _.evalMap { socket =>
+
+    IO {
+      println("subscribing ...")
+
+      in.subscribe(10).filter(_.content.nonEmpty).flatMap{ s =>
+        Stream.segment(Segment(s.content))
+      }.flatMap { b =>
+        Stream.chunk(ByteVectorChunk(ByteVector.apply(b.getBytes)))
+      }.to(socket.writes()).drain.onFinalize(socket.endOfOutput) merge in.subscribe(10).filter(_.content.nonEmpty).zip(socket.reads(1024, None).through(text.utf8Decode andThen CssSerializer.splitCssChunks)).flatMap { t =>
+
+        println("receveing processed!")
+        val postProcessedSheet = t._2
+        val oldSheet = t._1
+
+        Stream.eval(
+          IO {
+            WebDev.createInfo(
+              oldSheet.id,
+              oldSheet.outputPath,
+              postProcessedSheet,
+              WebDev.CSS
+            )
+         })
+      }.to(out.enqueue).drain
+
+      socket
+    }
+
+
+
+  }
+
+  val stream: Stream[IO, Unit] = tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
+
+    var cache: Info = null
+
+    (in.subscribe(10).filter(_.content.nonEmpty).flatMap { s =>
+      cache = s
+      Stream.segment(Segment(s.content))
+    }.flatMap { b =>
+      Stream.chunk(ByteVectorChunk(ByteVector.apply(b.getBytes)))
+    }.to(socket.writes()) ++ socket.reads(1024, None).through(text.utf8Decode andThen CssSerializer.splitCssChunks).flatMap { s =>
+      Stream.eval( IO {
+        WebDev.createInfo(
+          cache.id,
+          cache.outputPath,
+          s,
+          cache.`type`
+        )
+      } )
+    }.observe(logInfo).to(out.enqueue))
+
+//    in.subscribe(10).filter(_.content.nonEmpty).zip(socket.reads(1024, None).through(text.utf8Decode andThen CssSerializer.splitCssChunks)).flatMap { t =>
+//
+//      println("receveing processed!")
+//      val postProcessedSheet = t._2
+//      val oldSheet = t._1
+//
+//      Stream.eval(
+//        IO {
+//          WebDev.createInfo(
+//            oldSheet.id,
+//            oldSheet.outputPath,
+//            postProcessedSheet,
+//            WebDev.CSS
+//          )
+//        })
+//    }.to(out.enqueue).drain
+
+
+  }
+
+  val stream9: Stream[IO, Unit] = tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
+
+    var cache: Info = null
+
+    in.subscribe(10).filter(_.content.nonEmpty).flatMap { s =>
+      cache = s
+      Stream.segment(Segment(s.content))
+    }.flatMap { b =>
+      Stream.chunk(ByteVectorChunk(ByteVector.apply(b.getBytes)))
+    }.to(socket.writes()) merge socket.reads(1024, None).through(text.utf8Decode andThen CssSerializer.splitCssChunks).flatMap { s =>
+      Stream.eval( IO {
+        WebDev.createInfo(
+          cache.id,
+          cache.outputPath,
+          s,
+          cache.`type`
+        )
+      } )
+    }.observe(logInfo).to(out.enqueue).drain
+
+    //    in.subscribe(10).filter(_.content.nonEmpty).zip(socket.reads(1024, None).through(text.utf8Decode andThen CssSerializer.splitCssChunks)).flatMap { t =>
+    //
+    //      println("receveing processed!")
+    //      val postProcessedSheet = t._2
+    //      val oldSheet = t._1
+    //
+    //      Stream.eval(
+    //        IO {
+    //          WebDev.createInfo(
+    //            oldSheet.id,
+    //            oldSheet.outputPath,
+    //            postProcessedSheet,
+    //            WebDev.CSS
+    //          )
+    //        })
+    //    }.to(out.enqueue).drain
+
+
+  }
+
+  val stream5: Stream[IO, Unit] =
     tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
 
         println("data received ???")
@@ -83,13 +198,13 @@ class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
                 )
               }
             )
-          }
+          }.to(out.enqueue)
           program <- Stream(nodeJS, cssProcessed, both).covary[IO]
         } yield program
 
     }
 
-  val stream: Stream[IO, Unit] =
+  val stream4: Stream[IO, Unit] =
     tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
       in.subscribe(10).filter(_.content.nonEmpty).flatMap { s =>
 

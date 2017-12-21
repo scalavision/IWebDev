@@ -9,12 +9,13 @@ import prickle._
 import scodec.Codec
 import scodec.codecs._
 import spinoco.fs2.http
-import spinoco.fs2.http.websocket
+import spinoco.fs2.http.{HttpResponse, websocket}
 import spinoco.fs2.http.websocket.Frame
 import Resources._
 
 import scala.concurrent.duration._
 import iwebdev.model.WebDev.Info
+import spinoco.protocol.http.HttpRequestHeader
 
 class WebSocketServer(
   clientData: Queue[IO, String],

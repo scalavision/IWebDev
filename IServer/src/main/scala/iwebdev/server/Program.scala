@@ -9,14 +9,13 @@ import iwebdev.model.WebDev.Info
 
 object Program {
 
-  private def log(prefix: String): Sink[IO, Info] = _.evalMap { s =>
+  private def log(prefix: String): Pipe[IO, Info, Info] = _.evalMap { s =>
     IO {
-      println(s"$prefix " + s)
+      println(s"$prefix " + s);s
     }
   }
 
   def cssProgram: Stream[IO, Unit] = for {
-
 
     fromCss4sQ <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
     fromNodeJSQ <- Stream.eval(async.unboundedQueue[IO, Info])
@@ -26,12 +25,8 @@ object Program {
     nodeJSClient = new NodeJSClient(fromCss4sQ, fromNodeJSQ)
     webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ, fromCss4sQ)
 
-    css4sServer = new WebDevServer(cssIn, jsIn)
-    nodeJSClient = new NodeJSClient(cssIn, fromNodeJSQ)
-    webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ)
-
     cssProcessor <-  Stream(
-      css4sServer.stream,
+      css4sServer.css4sIn,
       nodeJSClient.stream,
       webSocketServer.stream
     ).join(3)

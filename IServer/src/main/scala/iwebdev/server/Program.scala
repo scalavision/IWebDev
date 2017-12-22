@@ -17,6 +17,7 @@ object Program {
 
   def cssProgram: Stream[IO, Unit] = for {
 
+
     fromCss4sQ <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
     fromNodeJSQ <- Stream.eval(async.unboundedQueue[IO, Info])
     clientStream <- Stream.eval(async.unboundedQueue[IO, String])
@@ -24,6 +25,10 @@ object Program {
     css4sServer = new Css4sServer(fromCss4sQ)
     nodeJSClient = new NodeJSClient(fromCss4sQ, fromNodeJSQ)
     webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ, fromCss4sQ)
+
+    css4sServer = new WebDevServer(cssIn, jsIn)
+    nodeJSClient = new NodeJSClient(cssIn, fromNodeJSQ)
+    webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ)
 
     cssProcessor <-  Stream(
       css4sServer.stream,

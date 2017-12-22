@@ -3,9 +3,9 @@ package iwebdev.server
 import java.net.{InetAddress, InetSocketAddress}
 
 import cats.effect.IO
-import fs2.async.mutable.Topic
+import fs2.async.mutable.{Queue, Topic}
 import fs2.io.tcp.serverWithLocalAddress
-import fs2.{Chunk, Pipe, Stream, async}
+import fs2.{Chunk, Pipe, Sink, Stream, async}
 import iwebdev.model.WebDev
 import scodec.bits.BitVector
 import scodec.stream.toLazyBitVector
@@ -13,7 +13,7 @@ import Resources._
 import iwebdev.model.WebDev.Info
 
 // TODO: Create a separate server for javascript
-class Css4sServer(topic: Topic[IO, Info]) {
+class WebDevServer(cssIn: Queue[IO, Info], jsIn: Queue[IO, Info]) {
 
   val localBindAddress = async.promise[IO, InetSocketAddress].unsafeRunSync()
 
@@ -35,6 +35,15 @@ class Css4sServer(topic: Topic[IO, Info]) {
     }
   }
 
+  val splitInputStream: Sink[IO, Info] = _.evalMap { i =>
+    IO {
+      i.`type` match {
+        case WebDev.CSS => cssIn.enqueue(Stream.emit(i))
+        case WebDev.JS => jsIn.enqueue(Stream.emit(i))
+      }
+    }
+  }
+
   val stream: Stream[IO, Unit] =
     serverWithLocalAddress[IO](new InetSocketAddress(InetAddress.getByName(null), 6000)).flatMap {
       case Left(local) =>
@@ -46,7 +55,7 @@ class Css4sServer(topic: Topic[IO, Info]) {
 
           // through(hasChanged).filter(_.content.isEmpty) // used as a simple cache not to process already existing stylesheets ...
 
-          socket.reads(1024).chunks.map(_.toArray).through(extractBytes).to(topic.publish) ++
+          socket.reads(1024).chunks.map(_.toArray).through(extractBytes).to(cssIn.enqueue) ++
             Stream.chunk(Chunk.bytes("Received Data".getBytes)).covary[IO].to(socket.writes()).drain.onFinalize(socket.endOfOutput)
         }
     }.joinUnbounded

@@ -17,12 +17,14 @@ object Program {
 
   def cssProgram: Stream[IO, Unit] = for {
 
-    fromCss4sQ <- Stream.eval(async.boundedQueue[IO, Info](100))
+    cssIn <- Stream.eval(async.boundedQueue[IO, Info](100))
+    jsIn <- Stream.eval(async.boundedQueue[IO, Info](100))
+    toBrowser <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
     fromNodeJSQ <- Stream.eval(async.boundedQueue[IO, Info](100))
     clientStream <- Stream.eval(async.boundedQueue[IO, String](100))
 
-    css4sServer = new Css4sServer(fromCss4sQ)
-    nodeJSClient = new NodeJSClient(fromCss4sQ, fromNodeJSQ)
+    css4sServer = new WebDevServer(cssIn, jsIn)
+    nodeJSClient = new NodeJSClient(cssIn, fromNodeJSQ)
     webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ)
 
     cssProcessor <-  Stream(

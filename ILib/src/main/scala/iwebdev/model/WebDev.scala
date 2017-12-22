@@ -18,7 +18,17 @@ object WebDev {
     content: String
   )
 
-  sealed trait ReplaceInfo
+
+
+  sealed trait ReplaceInfo {
+    def toInfo = this match {
+      case j:Js =>
+        Info(j.id, JS, j.hash, j.outputPath, j.content)
+      case css:Css =>
+        Info(css.id, CSS, css.hash, css.outputPath, css.content)
+    }
+
+  }
 
   case class Js(
     id: String,

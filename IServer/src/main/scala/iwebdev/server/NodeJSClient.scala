@@ -3,17 +3,15 @@ package iwebdev.server
 import java.net.InetSocketAddress
 
 import cats.effect.IO
-import fs2.async.mutable.{Queue, Topic}
-import fs2.interop.scodec.ByteVectorChunk
+import fs2.async.mutable.Queue
 import fs2.io.tcp
-import fs2.{Chunk, Pipe, Segment, Sink, Stream, async, text}
-import scodec.bits.ByteVector
+import fs2.{Chunk, Sink, Stream, async, text}
 import iwebdev.model.WebDev
 import iwebdev.model.WebDev.Info
 import Resources._
-import fs2.io.tcp.Socket
 
-class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
+
+class NodeJSClient (in: Queue[IO, Info], out: Queue[IO, Info]) {
 
   val localBindAddress =
     async.promise[IO, InetSocketAddress].unsafeRunSync()
@@ -30,9 +28,140 @@ class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
     }
   }
 
+  val stream: Stream[IO, Unit] = tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
+
+      in.dequeue.map(_.content).filter(_.nonEmpty).flatMap { s => Stream.eval(socket.write(Chunk.bytes(s.getBytes)))}.drain mergeHaltBoth
+        socket.reads(1024, None).through(text.utf8Decode andThen CssSerializer.splitCssChunks).map( css =>
+        WebDev.createCss(
+          "myId",
+          "outputpath",
+          css
+        ).toInfo
+      ).to(out.enqueue).drain
+
+    }
+
+
+  /*
+  def stream(p: Pipe[IO, Info, Info]) = tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
+
+
+
+
+    ???
+  }*/
+
+  /*
+  val stream: Stream[IO, Unit] = tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
+
+    println("opening socket ...")
+    in.dequeue.map { i =>
+      val t = async.topic[IO, Info](i)
+      t.flatMap { inner =>
+
+        println("inner ...")
+          IO {
+            inner.subscribe(1).map(_.content).filter(_.nonEmpty).flatMap { s => Stream.eval(socket.write(Chunk.bytes(s.getBytes)))} merge
+            inner.subscribe(1).zip(socket.reads(1024, None).through(text.utf8Decode andThen CssSerializer.splitCssChunks)).flatMap { t =>
+              Stream.eval(
+                IO{
+                  val postProcessedSheet = t._2
+                  val oldSheet = t._1
+                  WebDev.createInfo(
+                    oldSheet.id,
+                    oldSheet.outputPath,
+                    postProcessedSheet,
+                    WebDev.CSS
+                  )
+                }
+              )
+            }.to(out.enqueue).drain
+          }
+      }.unsafeRunSync()
+
+    }.drain
+
+  }*/
+
+
+    /*
+    in.dequeue.evalMap { i =>
+      IO {
+
+        async.topic[IO, Info](i).flatMap { s =>
+
+          s.subscribe(1).map(_.content).filter(_.nonEmpty).flatMap { s => Stream.eval(
+            socket.write(
+              Chunk.bytes(
+                s.getBytes
+              )
+            )
+          )
+          }
+          s.subscribe(1).zip(
+            socket.reads(1024, None).through(
+              text.utf8Decode andThen CssSerializer.splitCssChunks
+            )
+          ).flatMap { t =>
+
+            val postProcessedSheet = t._2
+            val oldSheet = t._1
+
+            Stream.eval(
+              IO {
+                WebDev.createInfo(
+                  oldSheet.id,
+                  oldSheet.outputPath,
+                  postProcessedSheet,
+                  WebDev.CSS
+                )
+              }
+            )
+
+          }
+
+        }
+      }
+    }
+
+
+    }
+
+
+
+//    val repeatPoll: Stream[IO, Info] = in.dequeue.repeat
+//
+//    for {
+//      i <- repeatPoll
+//
+//    }
+
+
+
+
+//    async.signalOf[IO, Info](WebDev.createInit).flatMap { sig =>
+
+
+
+
+
+//
+//      val out: Stream[IO, Unit] = in.dequeue.map {i => sig.set(i); i.content }.filter(_.nonEmpty).flatMap { s => Stream.eval(socket.write(Chunk.bytes(s.getBytes))) } //merge
+//
+//      val in: Stream[IO, Unit] = sig.flatMap
+//
+//
+//         //socket.reads(1024).through(text.utf8Decode andThen CssSerializer.splitCssChunks)
+//
+//
+//
+//    }
+
+
   // Keep for testing purposes ...
   // val message = Chunk.bytes("a { display: flex; }".getBytes)
   // Stream.chunk(message).covary[IO].to(socket.writes()).drain.onFinalize(socket.endOfOutput)
+
 
   def client(oldInfo: Info, in: Queue[IO, Info], out: Queue[IO, Info]): Stream[IO, Unit] =
     tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
@@ -92,7 +221,7 @@ class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
 
   }
 
-  val stream: Stream[IO, Unit] = tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
+  val stream6: Stream[IO, Unit] = tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
 
     var cache: Info = null
 
@@ -235,4 +364,5 @@ class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
 
       }.to(log).drain
     }
+    */
 }

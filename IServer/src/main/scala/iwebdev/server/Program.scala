@@ -23,7 +23,7 @@ object Program {
 
     css4sServer = new Css4sServer(fromCss4sQ)
     nodeJSClient = new NodeJSClient(fromCss4sQ, fromNodeJSQ)
-    webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ)
+    webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ, fromCss4sQ)
 
     cssProcessor <-  Stream(
       css4sServer.css4sIn,

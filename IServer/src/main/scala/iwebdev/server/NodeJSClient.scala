@@ -29,7 +29,8 @@ class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
 
   val stream: Stream[IO, Unit] =
     tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
-      in.subscribe(100).filter(_.content.nonEmpty).flatMap { s =>
+
+      in.subscribe(100).filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS).flatMap { s =>
 
         Stream.segment(Segment(s.content))
 

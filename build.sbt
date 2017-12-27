@@ -71,6 +71,7 @@ lazy val IClient = project.in(file("IClient"))
     libraryDependencies ++= Seq(
       "com.github.benhutchison" %%% "prickle" % "1.1.13",
       "org.scala-js" %%% "scalajs-dom" % "0.9.1",
+      "org.scodec" %%% "scodec-bits" % "1.1.5",
     )
   )
   .dependsOn(ICodecJS)

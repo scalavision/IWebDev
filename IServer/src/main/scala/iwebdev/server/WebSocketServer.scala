@@ -53,7 +53,7 @@ class WebSocketServer(
 
   private def webSocket = websocket.server(
     pipe = requestHandler,
-    pingInterval = 1000.seconds,
+    pingInterval = 10.seconds,
     handshakeTimeout = 10.seconds
   ) _
 

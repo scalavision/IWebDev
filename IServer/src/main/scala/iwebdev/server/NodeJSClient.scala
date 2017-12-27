@@ -6,7 +6,7 @@ import cats.effect.IO
 import fs2.async.mutable.{Queue, Topic}
 import fs2.interop.scodec.ByteVectorChunk
 import fs2.io.tcp
-import fs2.{Pipe, Segment, Sink, Stream, async, text}
+import fs2.{Segment, Sink, Stream, async, text}
 import scodec.bits.ByteVector
 import iwebdev.model.WebDev
 import iwebdev.model.WebDev.Info

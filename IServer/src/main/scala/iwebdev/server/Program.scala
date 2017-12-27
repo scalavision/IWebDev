@@ -17,16 +17,17 @@ object Program {
 
   def cssProgram: Stream[IO, Unit] = for {
 
-    fromCss4sQ <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
+    cssInQ <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
+    jsInQ <- Stream.eval(async.unboundedQueue[IO, Info])
     fromNodeJSQ <- Stream.eval(async.unboundedQueue[IO, Info])
     clientStream <- Stream.eval(async.unboundedQueue[IO, String])
 
-    css4sServer = new Css4sServer(fromCss4sQ)
-    nodeJSClient = new NodeJSClient(fromCss4sQ, fromNodeJSQ)
-    webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ, fromCss4sQ)
+    css4sServer = new WebDevServer(cssInQ, jsInQ)
+    nodeJSClient = new NodeJSClient(cssInQ, fromNodeJSQ)
+    webSocketServer = new WebSocketServer(clientStream, fromNodeJSQ, cssInQ)
 
     cssProcessor <-  Stream(
-      css4sServer.css4sIn,
+      css4sServer.stream,
       nodeJSClient.stream,
       webSocketServer.stream
     ).join(3)

@@ -14,6 +14,7 @@ import iwebdev.model.WebDev.Info
 
 class Css4sServer(topic: Topic[IO, Info]) {
 
+
   val localBindAddress = async.promise[IO, InetSocketAddress].unsafeRunSync()
 
   val debug: Pipe[IO,Array[Byte], Array[Byte]] = _.evalMap { bb =>

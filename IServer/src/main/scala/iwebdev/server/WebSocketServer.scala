@@ -28,9 +28,15 @@ class WebSocketServer(
 
   private def log(prefix: String): Pipe[IO, Info, Info] = _.evalMap { s =>
     IO {
-      println(s"$prefix " + s);s
+      println(s"$prefix ");s
     }
   }
+
+//  private def logInfo(prefix: String): Pipe[IO, Info, Info] = _.evalMap { s =>
+//    IO {
+//      println(s"$prefix " + s);s
+//    }
+//  }
 
   val requestHandler: Pipe[IO, Frame[String], Frame[String]] =  { in =>
     in.flatMap { fromClient =>

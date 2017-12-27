@@ -1,5 +1,6 @@
 package iwebdev.client
 
+import iwebdev.client.api.Init
 import iwebdev.client.renderer.{CssRenderer, JsRenderer}
 import iwebdev.model.WebDev
 import iwebdev.model.WebDev.{Info, ReplaceInfo}
@@ -17,7 +18,7 @@ class WebSocketClient {
 
   def run() = {
 
-    println("running ...")
+    println("starting websocket client ...")
 
     def sendMessage(msg: String) = {
       socket.send(msg)
@@ -49,16 +50,15 @@ class WebSocketClient {
         case s : String =>
 
           val info = Unpickle[Info].fromString(s).get
-
-          println("we got this: ")
-          println(info)
-
+          println("updateing client ...")
           replaceNode(WebDev(info))
+          Init.run()
 
         case b: Blob =>
           println("undefined result : " + e.data)
           println(b.size)
           println(b.`type`)
+          throw new Exception("ERROR OCCURED, RECEIVED BINARY INSTEAD OF STRINGS ON WEBSOCKET !!!!")
       }
 
     }

@@ -6,7 +6,7 @@ import cats.effect.IO
 import fs2.async.mutable.{Queue, Topic}
 import fs2.interop.scodec.ByteVectorChunk
 import fs2.io.tcp
-import fs2.{Segment, Sink, Stream, async, text}
+import fs2.{Pipe, Segment, Sink, Stream, async, text}
 import scodec.bits.ByteVector
 import iwebdev.model.WebDev
 import iwebdev.model.WebDev.Info
@@ -31,9 +31,7 @@ class NodeJSClient (in: Topic[IO, Info], out: Queue[IO, Info]) {
     tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
 
       in.subscribe(100).filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS).flatMap { s =>
-
         Stream.segment(Segment(s.content))
-
       }.flatMap{ b =>
 
         Stream.chunk(ByteVectorChunk(ByteVector.apply(b.getBytes)))

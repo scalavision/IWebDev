@@ -9,9 +9,9 @@ import iwebdev.model.WebDev.Info
 
 object Program {
 
-  private def log(prefix: String): Sink[IO, Info] = _.evalMap { s =>
+  private def log(prefix: String): Pipe[IO, Info, Info] = _.evalMap { s =>
     IO {
-      println(s"$prefix " + s)
+      println(s"$prefix " + s);s
     }
   }
 

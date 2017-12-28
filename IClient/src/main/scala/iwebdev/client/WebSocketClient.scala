@@ -1,8 +1,12 @@
 package iwebdev.client
 
+<<<<<<< HEAD
 import iwebdev.client.api.Init
 import iwebdev.client.renderer.{CssRenderer, JsRenderer}
 import iwebdev.client.ws.PingFrame
+=======
+import iwebdev.client.renderer.{CssRenderer, JsRenderer}
+>>>>>>> origin/master
 import iwebdev.model.WebDev
 import iwebdev.model.WebDev.{Info, ReplaceInfo}
 import org.scalajs.dom
@@ -25,6 +29,7 @@ class WebSocketClient {
   def run() = {
 
     println("starting websocket client ...")
+    println("running ...")
 
     def sendMessage(msg: String) = {
       socket.send(msg)

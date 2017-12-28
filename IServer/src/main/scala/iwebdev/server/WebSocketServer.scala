@@ -46,7 +46,7 @@ class WebSocketServer(
       } ).to(clientData.enqueue).drain ++
         Stream(
           styleSheets.dequeue,
-          infoInQ.subscribe(100).filter(_.`type` == WebDev.JS)
+          infoInQ.subscribe(100).filter(iQ => iQ.`type` == WebDev.JS || iQ.`type` == WebDev.SBT_INFO)
         ).join(2).flatMap { s =>
           Stream.eval(IO { Frame.Text(Pickle.intoString(s)) })
         }

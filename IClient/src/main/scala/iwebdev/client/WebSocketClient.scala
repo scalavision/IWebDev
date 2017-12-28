@@ -6,13 +6,12 @@ import iwebdev.model.WebDev.Info
 import org.scalajs.dom
 import org.scalajs.dom.{Blob, WebSocket}
 import prickle.Unpickle
-
 import scala.scalajs.js.timers._
 import scala.scalajs.js.annotation.JSExportAll
 
 
 /**
-  * Connection with the WebDev server, getting [[iwebdev.model.WebDev.Info]] objects from server.
+  * Connection with the WebDev server, getting [[iwebdev.model.WebDev]] Info objects from server.
   * For each Info object there will be a corresponding dom node created from the `content` property.
   * The Info object's `id` property is used as the dom node / elements id. An update removes and
   * adds the dom node again ..

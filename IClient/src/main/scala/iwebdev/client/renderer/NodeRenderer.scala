@@ -44,6 +44,9 @@ object NodeRenderer {
       case c: WebDev.Css =>
         println("replacing javascript for dom node with Id: " + c.id + " located at: " + c.outputPath)
         createElement()
+      case s: WebDev.SBTInfo =>
+        //TODO: create a nice toaster maybe ???
+        println("SBT_INFO: " + s.content)
       case i: WebDev.Init.type =>
         println("got an init object from the server, this should not occur, but doesn't do any harm either ...")
       case _ =>

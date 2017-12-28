@@ -14,6 +14,7 @@ object WebDev {
   val JS: InfoType = "JS"
   val CSS: InfoType = "CSS"
   val INIT: InfoType = "INIT"
+  val SBT_INFO: InfoType = "SBT_INFO"
 
   case class Info(
     id: String,
@@ -50,6 +51,13 @@ object WebDev {
     content: String
   ) extends ReplaceInfo
 
+  case class SBTInfo(
+    id: String,
+    hash: Int,
+    outputPath: String,
+    content: String
+  )
+
   case object Init extends ReplaceInfo
 
   def createInit = Info(
@@ -78,9 +86,8 @@ object WebDev {
     content: String
   ) = Css(id, content.hashCode, outputPath, content)
 
-
-
   def apply(info: Info) = {
+
     info.`type` match {
       case JS => Js(
         info.id,
@@ -88,12 +95,21 @@ object WebDev {
         info.outputPath,
         info.content
       )
+
       case CSS => Css(
         info.id,
         info.hash,
         info.outputPath,
         info.content
       )
+
+      case SBT_INFO => SBTInfo(
+        info.id,
+        info.hash,
+        info.outputPath,
+        info.content
+      )
+
       case INIT =>
         Init
     }

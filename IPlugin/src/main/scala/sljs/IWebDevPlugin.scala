@@ -11,12 +11,19 @@ import org.scalajs.core.tools.io.WritableMemVirtualJSFile
 import org.scalajs.core.tools.logging.ScalaConsoleLogger
 import sbt._
 import sbt.Keys
+import sbt.Keys._
 import org.scalajs.sbtplugin.ScalaJSPlugin
+import org.apache.logging.log4j.message._
+
+
+import org.apache.logging.log4j.core.{LogEvent => Log4JLogEvent, _}
+import org.apache.logging.log4j.core.appender.AbstractAppender
+import org.apache.logging.log4j.core.layout.PatternLayout
 import iwebdev.server.Resources._
 
 /**
   * This sbt plugin is `WIP`. It takes the output from fastOptJS task wraps it
-  * into a [[iwebdev.model.WebDev.Info]] object and sends it to a
+  * into a [[iwebdev.model.WebDev]] Info object and sends it to a
   * running instance of Instant WebDev Server [[iwebdev.server.WebDevServer]]
   * on port 6000.
   *
@@ -50,6 +57,26 @@ object IWebDevPlugin extends AutoPlugin {
 
   implicit val serializer  = InfoCodec.infoCodec
 
+  val s = new Socket(InetAddress.getByName("localhost"), 6000)
+  val out = new PrintStream(s.getOutputStream())
+
+  def sendToWebDevServer(info: WebDev.Info): Unit = {
+
+    out.write(
+      serializer.encode(info).require.toByteArray
+    )
+
+    log.info("sending javascript to WebDev server ..")
+    out.flush()
+
+//    Thread.sleep(1000)
+//    s.getInputStream.close()
+
+//    out.close()
+//    s.close()
+
+  }
+
   val sljsSettings = Seq(
     outputJSPath := new java.io.File("."),
     outputJSFilename := {
@@ -58,6 +85,42 @@ object IWebDevPlugin extends AutoPlugin {
     domNodeId := {
       Keys.name.value
     },
+    (extraLoggers in ThisBuild) := {
+
+      def sendLogInfo(level: String, content: String) = {
+        sendToWebDevServer(WebDev.createInfo(
+          id = "sbtInfo",
+          outputPath = "",
+          content = level + " : " + content,
+          infoType = WebDev.SBT_INFO
+        ))
+      }
+      val clientLogger = new AbstractAppender(
+        "FakeAppender",
+        null,
+        PatternLayout.createDefaultLayout()) {
+        override def append(event: Log4JLogEvent): Unit = {
+
+          val level = sbt.internal.util.ConsoleAppender.toLevel(event.getLevel)
+          val message = event.getMessage
+
+          message match {
+            case o: ObjectMessage => {
+              o.getParameter match {
+                case e: sbt.internal.util.StringEvent => sendLogInfo(level.toString, e.message)
+                case e: sbt.internal.util.ObjectEvent[_] => sendLogInfo(level.toString, e.message.toString)
+                case _ => sendLogInfo(level.toString, message.getFormattedMessage)
+              }
+            }
+            case _ => sendLogInfo(level.toString, message.getFormattedMessage)
+          }
+        }
+      }
+      clientLogger.start()
+      val currentFunction = extraLoggers.value
+      (key: ScopedKey[_]) => clientLogger +: currentFunction(key)
+    },
+
     saveJS := {
 
       val irFiles = (scalaJSIR in Compile).value
@@ -86,10 +149,6 @@ object IWebDevPlugin extends AutoPlugin {
       val modules = scalaJSModuleInitializers.value
       val output = WritableMemVirtualJSFile.apply("clientInMemTmpFile")
 
-
-      val s = new Socket(InetAddress.getByName("localhost"), 6000)
-      val out = new PrintStream(s.getOutputStream())
-
       log.info("linking ..")
 
       linker.link(
@@ -101,25 +160,13 @@ object IWebDevPlugin extends AutoPlugin {
 
       log.info("finished ..")
 
-      val packet = WebDev.createInfo(
+      sendToWebDevServer(WebDev.createInfo(
         domNodeId.value,
         (outputJSPath.value / outputJSFilename.value).getAbsolutePath,
         output.content,
         WebDev.JS
-      )
+      ))
 
-      out.write(
-        serializer.encode(packet).require.toByteArray
-      )
-
-      log.info("sending javascript to WebDev server ..")
-      out.flush()
-
-      Thread.sleep(1000)
-      s.getInputStream.close()
-
-      out.close()
-      s.close()
 
       log.info("sent, socket and stream closed ..")
 

@@ -3,9 +3,9 @@ package iwebdev.server
 import java.net.{InetAddress, InetSocketAddress}
 
 import cats.effect.IO
-import fs2.async.mutable.{Queue, Topic}
+import fs2.async.mutable.Topic
 import fs2.io.tcp.serverWithLocalAddress
-import fs2.{Chunk, Pipe, Sink, Stream, async}
+import fs2.{Chunk, Pipe, Stream, async}
 import iwebdev.model.WebDev
 import scodec.bits.BitVector
 import scodec.stream.toLazyBitVector

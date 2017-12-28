@@ -2,6 +2,13 @@ package iwebdev.server
 
 import fs2.{Chunk, Pipe, Pull, Stream}
 
+/** Not in Use !
+  *
+  * splits all css blocks on  closing '}' bracket. For each '}' it counts backwards to see if they
+  * align, if so it creates a Chunk containing the css block.
+  *
+  */
+
 object CssStreamHandler {
 
   /** Transforms a stream of `String` such that each emitted `String` is a line from the input. */

@@ -6,8 +6,15 @@ import iwebdev.model.WebDev
 import scodec.bits._
 import scodec.codecs._
 import scodec.stream.{StreamDecoder, StreamEncoder, decode, encode}
-import scodec.{Attempt, Codec, DecodeResult}
 
+
+/**
+  * Creating a streaming codec for [[WebDev.Info]] objects
+  * Also splitting the returned postprocessed css from node server.
+  *
+  * It is splitted on `<<<`
+  *
+  */
 object CssSerializer {
 
   sealed trait Css

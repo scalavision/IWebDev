@@ -4,11 +4,16 @@ import java.lang.Thread.UncaughtExceptionHandler
 import java.nio.channels.AsynchronousChannelGroup
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
-
 import fs2.Scheduler
-
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
+
+/**
+  * Handles the execution context and channel groups. Probably are better ways
+  * of doing this ...
+  *
+  * It is inspired by fs2-http spec setup ...
+  */
 
 object Resources {
 

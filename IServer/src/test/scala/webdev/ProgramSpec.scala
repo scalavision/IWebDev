@@ -73,7 +73,7 @@ class ProgramSpec extends org.specs2.mutable.Specification with BeforeAfterAll {
 
   "CssDslInput" should {
     "be able to receive a connection" in {
-      lazy val result = Program.cssProgram.run.unsafeRunTimed(3.seconds)
+      lazy val result = Program.processInfoStream.run.unsafeRunTimed(3.seconds)
       println("result from run: " + result)
 
       1 == 1

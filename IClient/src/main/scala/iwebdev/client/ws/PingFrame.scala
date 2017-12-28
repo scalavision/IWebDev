@@ -1,15 +1,14 @@
 package iwebdev.client.ws
 
-import org.scalajs.dom.raw.{Blob, BlobPropertyBag}
-
+import org.scalajs.dom.raw.Blob
 import scala.scalajs.js
-import scala.scalajs.js.typedarray._
 import scodec.bits._
 import js.JSConverters._
 
 
+//TODO: investigate how to make WebSocket work with FS2 HTTP lib, probably need to use a Frame.Binary
 object PingFrame {
-
+// Taken from Specs in ScalaJS, don't know how to do this yet ...
 //  object Int8ArrayFactory {
 //    def bytesPerElement: Int = Int8Array.BYTES_PER_ELEMENT
 //    def lenCtor(len: Int): Int8Array = new Int8Array(len)
@@ -22,43 +21,26 @@ object PingFrame {
 //    def intToV(n: Int): Byte = n.toByte
 //  }
 
+  val maskPattern: ByteVector = hex"DEADBEEF"
+
   def ping = {
 
-//    val buf = itCtor(js.Array(5, 6, 7, 8)).buffer
-//    val x = bufCtor1(buf)
-
-    // first 4 bits means this is the final frame, rsv1 - 3 is all false, the ping /pong identifier, masked is true, length of data is set to 0
-    val framePingBinary = "0 0 0 0 0x09 1 0000000"
-    val framePongBinary = "0 0 0 0 0x0a 1 0000000"
-
+    // first 4 bits means this is the final frame, rsv1 - 3 is all false, the
+    // ping /pong identifier, masked is true, length of data is set to 0
 
     val pingHeader: BitVector = bin"0000 1001 1 0000000"
-    val pingMask: ByteVector = hex"DEADBEEF"
-
-    val pM = pingMask.toArray
+    val pM = maskPattern.toArray
     val pH = pingHeader.toByteArray
-
     val p = pM ++ pH
-
-    val b  = new Blob(p.map(_.asInstanceOf[js.Any]).toJSArray).close()
-    b.toString
-
+    new Blob(p.map(_.asInstanceOf[js.Any]).toJSArray).close()
   }
 
   val pong = {
-
     val pingHeader: BitVector = bin"0000 1010 1 0000000"
-    val pingMask: ByteVector = hex"DEADBEEF"
-
-    val pM = pingMask.toArray
+    val pM = maskPattern.toArray
     val pH = pingHeader.toByteArray
-
     val p = pM ++ pH
-
-    val b = new Blob(p.map(_.asInstanceOf[js.Any]).toJSArray)
-
-    b.toString
-
+    new Blob(p.map(_.asInstanceOf[js.Any]).toJSArray)
 
   }
 

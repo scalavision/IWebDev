@@ -114,7 +114,7 @@ object IWebDevPlugin extends AutoPlugin {
 
     },
     startDevServer := {
-      Program.cssProgram.run.unsafeRunSync()
+      Program.processInfoStream.run.unsafeRunSync()
     }
 
   )

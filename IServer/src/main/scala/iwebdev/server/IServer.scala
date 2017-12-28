@@ -1,7 +1,10 @@
 package iwebdev.server
 
+/**
+  * Running the Server
+  */
 object IServer extends App {
-  Program.cssProgram.run.unsafeRunSync()
+  Program.processInfoStream.run.unsafeRunSync()
 }
 
 

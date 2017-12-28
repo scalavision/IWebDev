@@ -20,16 +20,17 @@ object WebDev {
     `type`: InfoType,
     hash: Int,
     outputPath: String,
-    content: String
+    orderOfElementInDom: Int,
+    content: String,
   )
 
   // TODO: go through this ADT and see if there are ways to simplify ..
   sealed trait ReplaceInfo extends Product with Serializable {
     def toInfo = this match {
       case j:Js =>
-        Info(j.id, JS, j.hash, j.outputPath, j.content)
+        Info(j.id, JS, j.hash, j.outputPath, -1, j.content)
       case css:Css =>
-        Info(css.id, CSS, css.hash, css.outputPath, css.content)
+        Info(css.id, CSS, css.hash, css.outputPath, -1, css.content)
       case init: Init.type =>
         createInit
     }
@@ -52,7 +53,7 @@ object WebDev {
   case object Init extends ReplaceInfo
 
   def createInit = Info(
-    "", INIT, -1, "", ""
+    "", INIT, -1, "", -1, ""
   )
 
   def createInfo(
@@ -62,7 +63,7 @@ object WebDev {
     infoType: InfoType
   ): Info =
     Info(
-      id, infoType, content.hashCode, outputPath, content
+      id, infoType, content.hashCode, outputPath, -1, content
     )
 
   def createJS(

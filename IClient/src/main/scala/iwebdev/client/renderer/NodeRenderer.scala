@@ -7,12 +7,16 @@ import org.scalajs.dom.ext._
 import org.scalajs.dom.{Text, document}
 import org.scalajs.dom.raw.HTMLScriptElement
 
+/**
+  * Initializing, and updating the inline Javascript and Css content
+  */
 object NodeRenderer {
 
   def apply(info: Info): Unit  = {
 
     val node = document.getElementById(info.id)
 
+    // We only need to update the TextNode ...
     def updateText() = {
       node.childNodes.toIterable.filter(_.isInstanceOf[Text]).foreach{ t =>
         node.removeChild(t)

@@ -1,5 +1,10 @@
 package iwebdev.model
 
+
+/**
+  * The Info object is used as a transport object for the wire. Keeping it simple makes it easy
+  * to create a codec. The ReplaceInfo structure / ADT could probably be improved upon.
+  */
 object WebDev {
 
   // Keeping this structure really simple as it needs to be
@@ -18,14 +23,16 @@ object WebDev {
     content: String
   )
 
-  sealed trait ReplaceInfo {
+  // TODO: go through this ADT and see if there are ways to simplify ..
+  sealed trait ReplaceInfo extends Product with Serializable {
     def toInfo = this match {
       case j:Js =>
         Info(j.id, JS, j.hash, j.outputPath, j.content)
       case css:Css =>
         Info(css.id, CSS, css.hash, css.outputPath, css.content)
+      case init: Init.type =>
+        createInit
     }
-
   }
 
   case class Js(
@@ -41,6 +48,8 @@ object WebDev {
     outputPath: String,
     content: String
   ) extends ReplaceInfo
+
+  case object Init extends ReplaceInfo
 
   def createInit = Info(
     "", INIT, -1, "", ""
@@ -84,6 +93,8 @@ object WebDev {
         info.outputPath,
         info.content
       )
+      case INIT =>
+        Init
     }
   }
 

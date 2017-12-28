@@ -1,20 +1,23 @@
 package iwebdev.client
 
-import iwebdev.client.api.Init
-import iwebdev.client.renderer.{CssRenderer, JsRenderer}
+import iwebdev.client.renderer.NodeRenderer
 import iwebdev.client.ws.PingFrame
-
-import iwebdev.client.renderer.{CssRenderer, JsRenderer}
-
-import iwebdev.model.WebDev
-import iwebdev.model.WebDev.{Info, ReplaceInfo}
+import iwebdev.model.WebDev.Info
 import org.scalajs.dom
-import org.scalajs.dom.raw.{BlobPropertyBag, HTMLStyleElement}
 import org.scalajs.dom.{Blob, WebSocket}
 import prickle.Unpickle
-import scala.scalajs.js.timers._
 
+import scala.scalajs.js.timers._
 import scala.scalajs.js.annotation.JSExportAll
+
+
+/**
+  * Connection with the WebDev server, getting [[iwebdev.model.WebDev.Info]] objects from server.
+  * For each Info object there will be a corresponding dom node created from the `content` property.
+  * The Info object's `id` property is used as the dom node / elements id. An update removes and
+  * adds the dom node again ..
+  *
+  */
 
 @JSExportAll
 class WebSocketClient {
@@ -28,13 +31,13 @@ class WebSocketClient {
   def run() = {
 
     println("starting websocket client ...")
-    println("running ...")
 
     def sendMessage(msg: String) = {
       socket.send(msg)
     }
 
-//    Not working yet ...
+    // TODO: implement a working Ping / Pong protocol with the websocket server
+//    The WebSocket Ping / Pong is still WIP
 //    setInterval(10000) {
 //      println("pinging the server")
 //      sendPong()
@@ -47,27 +50,14 @@ class WebSocketClient {
 
     }
 
-    def replaceNode(info: ReplaceInfo): Unit = info match {
-        case j: WebDev.Js =>
-          println("js")
-          JsRenderer.render(j)
-          Init.run()
-        case c: WebDev.Css =>
-          println("css")
-          CssRenderer.render(c)
-        case _ =>
-          throw new Exception("ERROR: something was utterly wrong ...")
-      }
-
     socket.onmessage = { (e: dom.MessageEvent) =>
 
-      println("received a message")
+      println("Got and update from Server!")
 
       e.data match {
         case s : String =>
           val info = Unpickle[Info].fromString(s).get
-          println("updateing client ...")
-          replaceNode(WebDev(info))
+          NodeRenderer(info)
 
         case b: Blob =>
           b.`type`

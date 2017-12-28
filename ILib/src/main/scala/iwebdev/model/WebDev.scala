@@ -20,7 +20,7 @@ object WebDev {
     `type`: InfoType,
     hash: Int,
     outputPath: String,
-    orderOfElementInDom: Int,
+    domElementIndex: Int,
     content: String,
   )
 

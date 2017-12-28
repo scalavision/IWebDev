@@ -3,7 +3,7 @@ package iwebdev.server
 import java.net.InetSocketAddress
 
 import cats.effect.IO
-import fs2.async.mutable.Queue
+import fs2.async.mutable.{Queue, Topic}
 import fs2.{Pipe, Stream}
 import prickle._
 import scodec.Codec
@@ -12,6 +12,7 @@ import spinoco.fs2.http
 import spinoco.fs2.http.{HttpResponse, websocket}
 import spinoco.fs2.http.websocket.Frame
 import Resources._
+import iwebdev.model.WebDev
 
 import scala.concurrent.duration._
 import iwebdev.model.WebDev.Info
@@ -19,20 +20,30 @@ import spinoco.protocol.http.HttpRequestHeader
 
 class WebSocketServer(
   clientData: Queue[IO, String],
-  styleSheets: Queue[IO, Info]
+  styleSheets: Queue[IO, Info],
+  javascript: Topic[IO, Info]
 ) {
 
   implicit val codecString: Codec[String] = utf8
 
   private def log(prefix: String): Pipe[IO, Info, Info] = _.evalMap { s =>
     IO {
-      println(s"$prefix " + s);s
+      println(s"$prefix ");s
     }
   }
 
+//  private def logInfo(prefix: String): Pipe[IO, Info, Info] = _.evalMap { s =>
+//    IO {
+//      println(s"$prefix " + s);s
+//    }
+//  }
+
   val requestHandler: Pipe[IO, Frame[String], Frame[String]] =  { in =>
     in.flatMap { fromClient =>
-        styleSheets.dequeue.through(log("pushed"))
+        Stream(
+          styleSheets.dequeue,
+          javascript.subscribe(100).filter(_.`type` == WebDev.JS)
+        ).join(2).through(log("pushed"))
           .flatMap(s => Stream.eval(IO { Frame.Text(Pickle.intoString(s)) }))
     }
   }
@@ -42,7 +53,7 @@ class WebSocketServer(
 
   private def webSocket = websocket.server(
     pipe = requestHandler,
-    pingInterval = 1000.seconds,
+    pingInterval = 10.seconds,
     handshakeTimeout = 10.seconds
   ) _
 

@@ -18,8 +18,6 @@ object WebDev {
     content: String
   )
 
-
-
   sealed trait ReplaceInfo {
     def toInfo = this match {
       case j:Js =>

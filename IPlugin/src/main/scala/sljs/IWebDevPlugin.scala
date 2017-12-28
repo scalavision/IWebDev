@@ -16,8 +16,6 @@ import sbt._
 import sbt.Keys
 import org.scalajs.sbtplugin.ScalaJSPlugin
 
-import scala.io.BufferedSource
-
 object IWebDevPlugin extends AutoPlugin {
   override def requires = ScalaJSPlugin
 
@@ -71,7 +69,7 @@ object IWebDevPlugin extends AutoPlugin {
 
       val irFiles = (scalaJSIR in Compile).value
       val modules = scalaJSModuleInitializers.value
-      val output = WritableMemVirtualJSFile.apply("test")
+      val output = WritableMemVirtualJSFile.apply("clientInMemTmpFile")
 
       def link() = linker.link(
         irFiles.data,
@@ -81,14 +79,18 @@ object IWebDevPlugin extends AutoPlugin {
       )
 
       val s = new Socket(InetAddress.getByName("localhost"), 6000)
-      lazy val in = new BufferedSource(s.getInputStream()).getLines()
+      //lazy val in = new BufferedSource(s.getInputStream()).getLines()
       val out = new PrintStream(s.getOutputStream())
 
-      val filePath = outputJSPath.value / outputJSFilename.value
+//      val filePath = outputJSPath.value / outputJSFilename.value
+
+//      println("filePath is: " + filePath.getAbsolutePath)
+
+      link()
 
       val packet = WebDev.createInfo(
         sbt.Keys.name.value,
-        filePath.getAbsolutePath,
+        "not implemented",//,
         output.content,
         WebDev.JS
       )
@@ -96,6 +98,7 @@ object IWebDevPlugin extends AutoPlugin {
       out.write(
         serializer.encode(packet).require.toByteArray
       )
+
       out.flush()
 
       Thread.sleep(1000)
@@ -106,11 +109,8 @@ object IWebDevPlugin extends AutoPlugin {
 
       println("everything has beens shutdown and resources are destroyed")
 
-
       println("Linking JS")
-      link()
       println("the linker was run!")
-      println(output.content)
 
     },
     startDevServer := {

@@ -335,12 +335,11 @@ class NodeJSClient (in: Queue[IO, Info], out: Queue[IO, Info]) {
 
   val stream4: Stream[IO, Unit] =
     tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
-      in.subscribe(10).filter(_.content.nonEmpty).flatMap { s =>
 
+      in.subscribe(100).filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS).flatMap { s =>
         Stream.segment(Segment(s.content))
 
       }.flatMap { b =>
-
         Stream.chunk(ByteVectorChunk(ByteVector.apply(b.getBytes)))
 
       }.to(socket.writes()) merge socket.reads(1024, None)

@@ -17,7 +17,8 @@ lazy val commonSettings = Seq(
      "org.scodec" %% "scodec-core" % "1.10.3",
      "com.github.benhutchison" %% "prickle" % "1.1.13",
      "org.scodec" %% "scodec-stream" % "1.1.0-M9",
-     "org.specs2" %% "specs2-core" % "4.0.0" % "test"
+     "org.specs2" %% "specs2-core" % "4.0.0" % "test",
+     "com.lihaoyi" %% "pprint" % "0.5.3"
    )
 )
 
@@ -65,9 +66,12 @@ lazy val IClient = project.in(file("IClient"))
   .settings(scalaSetup :_*)
   .settings(
     scalaJSUseMainModuleInitializer := true,
+    //artifactPath in (Compile, fastOptJS) := file("/Users/tomsorlie/IdeaProjects/Projects/MindPointer/Client"),
+    artifactPath in (Compile, fastOptJS) := file(System.getProperty("user.home") + "/IdeaProjects/Projects/MindPointer/Client/iclient-fastopt.js"),
     libraryDependencies ++= Seq(
       "com.github.benhutchison" %%% "prickle" % "1.1.13",
       "org.scala-js" %%% "scalajs-dom" % "0.9.1",
+      "org.scodec" %%% "scodec-bits" % "1.1.5"
     )
   )
   .dependsOn(ICodecJS)

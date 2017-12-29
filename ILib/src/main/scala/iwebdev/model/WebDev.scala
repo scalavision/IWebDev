@@ -32,6 +32,8 @@ object WebDev {
         Info(j.id, JS, j.hash, j.outputPath, -1, j.content)
       case css:Css =>
         Info(css.id, CSS, css.hash, css.outputPath, -1, css.content)
+      case sbtInfo: SBTInfo =>
+        Info(sbtInfo.id, SBT_INFO, sbtInfo.hash, sbtInfo.outputPath, -1, sbtInfo.content)
       case init: Init.type =>
         createInit
     }
@@ -89,6 +91,7 @@ object WebDev {
   def apply(info: Info) = {
 
     info.`type` match {
+
       case JS => Js(
         info.id,
         info.hash,

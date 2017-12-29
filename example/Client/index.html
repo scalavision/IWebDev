@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Example</title>
+  </head>
+  <body>
+    <h1>WebDevExample</h1>
+    <p>To make it work:</p>
+    <ul>
+      <li>In jsHelper folder, install dependencies with `yarn` or `npm`, start the node js application </li>
+      <li>Start the IWebDev server through SBT</li>
+      <li>Open this html file in a browser, you should see it connect to the WebDev Servers websocket</li>
+      <li>Start continous compilation of this project with ~pushToClient</li>
+    </ul>
+    <p>Whenever files in this project has changed, the newly compiled / fastOptJS'ed javascript is pushed to this
+    client, and the javascript dom node is replaced with the new javascript</p>
+
+    <p>
+      To test the CSS stylesheet update, use the ammonite script located in the CSS folder.
+    </p>
+    
+    <!-- Include Scala.js compiled code -->
+    <script type="text/javascript" src="target/scala-2.12/client-jsdeps.js"></script>
+    <!--The websocket library connecting to IWebDev WebSocketServer, updating compiled sources via dom manipulation-->
+    <script type="text/javascript" src="iclient-fastopt.js"></script>
+  </body>
+</html>

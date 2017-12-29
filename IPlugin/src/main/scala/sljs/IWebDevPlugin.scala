@@ -2,11 +2,12 @@ package sljs
 
 import java.io.{File, PrintStream}
 import java.net.{InetAddress, Socket}
+
 import iwebdev.codec.InfoCodec
 import iwebdev.model.WebDev
 import iwebdev.server.Program
 import org.scalajs.core.tools.linker
-import linker.StandardLinker
+import linker.{ModuleInitializer, StandardLinker}
 import org.scalajs.core.tools.io.WritableMemVirtualJSFile
 import org.scalajs.core.tools.logging.ScalaConsoleLogger
 import sbt._
@@ -14,8 +15,6 @@ import sbt.Keys
 import sbt.Keys._
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.apache.logging.log4j.message._
-
-
 import org.apache.logging.log4j.core.{LogEvent => Log4JLogEvent, _}
 import org.apache.logging.log4j.core.appender.AbstractAppender
 import org.apache.logging.log4j.core.layout.PatternLayout
@@ -56,6 +55,8 @@ object IWebDevPlugin extends AutoPlugin {
   import ScalaJSPlugin.AutoImport._
 
   implicit val serializer  = InfoCodec.infoCodec
+
+  val scalaJSLogger = new ScalaConsoleLogger()
 
   val s = new Socket(InetAddress.getByName("localhost"), 6000)
   val out = new PrintStream(s.getOutputStream())
@@ -146,19 +147,27 @@ object IWebDevPlugin extends AutoPlugin {
     pushToClient := {
 
       val irFiles = (scalaJSIR in Compile).value
-      val modules = scalaJSModuleInitializers.value
+      //val modules = scalaJSModuleInitializers.value
       val output = WritableMemVirtualJSFile.apply("clientInMemTmpFile")
 
       log.info("linking ..")
 
       linker.link(
         irFiles.data,
-        modules,
+        Seq(
+          ModuleInitializer.mainMethodWithArgs(
+            "mp.client.MindPointer", "main"
+          )
+//          ModuleInitializer.mainMethod(
+//            "mp.client.MindPointer", "main"
+//          )
+        ),
+//        modules,
         output,
-        new ScalaConsoleLogger()
+        scalaJSLogger
       )
 
-      log.info("finished ..")
+      log.info("finished with hash: " + output.content.hashCode())
 
       sendToWebDevServer(WebDev.createInfo(
         domNodeId.value,

@@ -67,6 +67,8 @@ object NodeRenderer {
         throw new Exception("ERROR: something was utterly wrong ...")
     }
 
+    // TODO: CREATE THE APPLICATION NODE, BIND EVERYTHING INSIDE IT, REFRESH IT WHENEVER A NEW APP IS ARRIVING ...
+
     def updateHtmlElement() = WebDev(info) match {
 
       case j: WebDev.Js =>
@@ -76,6 +78,8 @@ object NodeRenderer {
         document.body.childNodes.foreach { n =>
           if(n.isInstanceOf[Node] && !n.isInstanceOf[HTMLScriptElement])
             document.body.removeChild(n)
+          else
+            println(n.nodeValue)
         }
 
         updateDomNode()

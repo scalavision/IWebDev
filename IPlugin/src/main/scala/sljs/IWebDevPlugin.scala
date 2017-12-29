@@ -58,10 +58,11 @@ object IWebDevPlugin extends AutoPlugin {
 
   val scalaJSLogger = new ScalaConsoleLogger()
 
-  val s = new Socket(InetAddress.getByName("localhost"), 6000)
-  val out = new PrintStream(s.getOutputStream())
 
   def sendToWebDevServer(info: WebDev.Info): Unit = {
+
+  val s = new Socket(InetAddress.getByName("localhost"), 6000)
+  val out = new PrintStream(s.getOutputStream())
 
     out.write(
       serializer.encode(info).require.toByteArray
@@ -70,11 +71,11 @@ object IWebDevPlugin extends AutoPlugin {
     log.info("sending javascript to WebDev server ..")
     out.flush()
 
-//    Thread.sleep(1000)
-//    s.getInputStream.close()
+    Thread.sleep(1000)
+    s.getInputStream.close()
 
-//    out.close()
-//    s.close()
+    out.close()
+    s.close()
 
   }
 

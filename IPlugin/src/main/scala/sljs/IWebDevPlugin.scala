@@ -158,12 +158,7 @@ object IWebDevPlugin extends AutoPlugin {
         Seq(
           ModuleInitializer.mainMethodWithArgs(
             "mp.client.MindPointer", "main"
-          )
-//          ModuleInitializer.mainMethod(
-//            "mp.client.MindPointer", "main"
-//          )
-        ),
-//        modules,
+          )),
         output,
         scalaJSLogger
       )
@@ -176,11 +171,7 @@ object IWebDevPlugin extends AutoPlugin {
         output.content,
         WebDev.JS
       ))
-
-
       log.info("sent, socket and stream closed ..")
-
-
     },
     startDevServer := {
 //      log.info("The Instant WebDev Server support is still WIP ..")

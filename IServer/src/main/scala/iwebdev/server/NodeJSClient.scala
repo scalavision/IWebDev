@@ -59,7 +59,7 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
          // The received css from node is separated by `>>>`, we split the chunks here ...
         .through(text.utf8Decode andThen CssSerializer.splitCssChunks)
         .zip(
-          cssCache.dequeue.filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS)
+          cssCache.dequeue
         ).flatMap { t =>
 
         val postProcessedSheet = t._1

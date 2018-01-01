@@ -30,9 +30,15 @@ import Resources._
   * @param out
   */
 
+/*
+We are using a simple infoCache for now, had a cssCache enqueue / dequeue strategy but it got
+removed due to a bit misconception about buffer size in socket reads. We keep it like this for now,
+but if there are problems we might add the cssCache again.
 
-// cssCache: Queue[IO, Info],
-class NodeJSClient (in: Topic[IO, Info],cssCache: Queue[IO, Info], out: Queue[IO, Info]) {
+Having a subscription of only 1 item may solve the problem of rewriting the cache before getting
+result back from node js.
+ */
+class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[IO, Info]) {
 
   var infoCache: Info = null
 
@@ -55,26 +61,14 @@ class NodeJSClient (in: Topic[IO, Info],cssCache: Queue[IO, Info], out: Queue[IO
         in.subscribe(100).filter(i => i.`type` == WebDev.CSS).observe(log("receiving css")).flatMap { s =>
           Stream.chunk(Chunk.bytes(s.content.getBytes()))
         }.to(socket.writes()),
-
-          // caching the Info Object, had to do it this way
-          // TODO: is there a better way to do this ???
-       //in.subscribe(100).filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS).observe(log("enqueuing")).to(cssCache.enqueue).drain,
-//       in.subscribe(100).filter(i => i.`type` == WebDev.CSS).observe(log("enqueuing")).to(cssCache.enqueue),
        socket.reads(16, None)
          // The received css from node is separated by `>>>`, we split the chunks here ...
         .through(text.utf8Decode andThen CssSerializer.splitCssChunks)
-//        .zip {
-//          cssCache.dequeue
-//        }
          .flatMap { t =>
-
-//        val postProcessedSheet = t._1
-//        val oldSheet = t._2
 
         Stream.eval(IO {
           if(null != infoCache){
 
-            println("not null")
             infoCache.copy(
               content = t
             )

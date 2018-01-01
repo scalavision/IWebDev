@@ -58,7 +58,7 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
       // We create a Stream of all the socket side effects, and caching of the Info object
       Stream(
         // reading from the topic, filtering out the initial topic, and using only the CSS `type`
-        in.subscribe(100).filter(i => i.`type` == WebDev.CSS).observe(log("receiving css")).flatMap { s =>
+        in.subscribe(1).filter(i => i.`type` == WebDev.CSS).observe(log("receiving css")).flatMap { s =>
           Stream.chunk(Chunk.bytes(s.content.getBytes()))
         }.to(socket.writes()),
        socket.reads(16, None)

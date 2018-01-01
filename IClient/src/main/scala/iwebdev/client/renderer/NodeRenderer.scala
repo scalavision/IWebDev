@@ -72,15 +72,22 @@ object NodeRenderer {
     def updateHtmlElement() = WebDev(info) match {
 
       case j: WebDev.Js =>
-
         // We need to remove old javascript dom, could try to find faster
         // more unsafe ways of doing this (with respect to memleaks)
-        document.body.childNodes.foreach { n =>
-          if(n.isInstanceOf[Node] && !n.isInstanceOf[HTMLScriptElement])
-            document.body.removeChild(n)
-          else
-            println(n.nodeValue)
+
+        val application = document.getElementById("application").parentNode
+
+        application.childNodes.toIterable.foreach { n =>
+          if(n.isInstanceOf[HTMLElement] && n.asInstanceOf[HTMLElement].id == "application")
+            application.removeChild(n)
         }
+
+//        document.body.childNodes.foreach { n =>
+//          if(n.isInstanceOf[Node] && !n.isInstanceOf[HTMLScriptElement])
+//            document.body.removeChild(n)
+//          else
+//            println(n)
+//        }
 
         updateDomNode()
         createElement()

@@ -1,11 +1,12 @@
 package iwebdev.server
 
 import java.net.InetSocketAddress
+
 import cats.effect.IO
 import fs2.async.mutable.{Queue, Topic}
 import fs2.interop.scodec.ByteVectorChunk
 import fs2.io.tcp
-import fs2.{Segment, Sink, Stream, async, text}
+import fs2.{Chunk, Segment, Sink, Stream, async, text}
 import scodec.bits.ByteVector
 import iwebdev.model.WebDev
 import iwebdev.model.WebDev.Info
@@ -47,11 +48,16 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
       Stream(
         // reading from the topic, filtering out the initial topic, and using only the CSS `type`
         in.subscribe(100).filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS).flatMap { s =>
-          Stream.segment(Segment(s.content))
-        }.flatMap{ b =>
-          //TODO: This way of transformation and serialization could probably be done much easier and more efficiently
-          Stream.chunk(ByteVectorChunk(ByteVector.apply(b.getBytes)))
+          println(s"handling: $s")
+          Stream.chunk(Chunk.bytes(s.content.getBytes()))
         }.to(socket.writes()),
+
+        //        in.subscribe(100).filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS).flatMap { s =>
+//          Stream.segment(Segment(s.content))
+//        }.flatMap{ b =>
+//          //TODO: This way of transformation and serialization could probably be done much easier and more efficiently
+//          Stream.chunk(ByteVectorChunk(ByteVector.apply(b.getBytes)))
+//        }.to(socket.writes()),
 
           // caching the Info Object, had to do it this way
           // TODO: is there a better way to do this ???

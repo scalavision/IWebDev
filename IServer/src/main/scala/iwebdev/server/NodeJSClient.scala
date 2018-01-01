@@ -30,14 +30,19 @@ import Resources._
   * @param out
   */
 
-class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[IO, Info]) {
+
+// cssCache: Queue[IO, Info],
+class NodeJSClient (in: Topic[IO, Info],cssCache: Queue[IO, Info], out: Queue[IO, Info]) {
+
+  var infoCache: Info = null
 
   val localBindAddress =
     async.promise[IO, InetSocketAddress].unsafeRunSync()
 
-  val log: Sink[IO, Info] = _.evalMap { s =>
+  def log(prefix: String): Sink[IO, Info] = _.evalMap { s =>
     IO {
-      println("postProcessed: ")
+      infoCache = s
+      println(s"$prefix > ${s.id}")
     }
   }
 
@@ -47,35 +52,39 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
       // We create a Stream of all the socket side effects, and caching of the Info object
       Stream(
         // reading from the topic, filtering out the initial topic, and using only the CSS `type`
-        in.subscribe(100).filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS).flatMap { s =>
+        in.subscribe(100).filter(i => i.`type` == WebDev.CSS).observe(log("receiving css")).flatMap { s =>
           Stream.chunk(Chunk.bytes(s.content.getBytes()))
         }.to(socket.writes()),
 
           // caching the Info Object, had to do it this way
           // TODO: is there a better way to do this ???
-       in.subscribe(100).filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS).to(cssCache.enqueue),
-
-       socket.reads(1024, None)
+       //in.subscribe(100).filter(i => i.content.nonEmpty && i.`type` == WebDev.CSS).observe(log("enqueuing")).to(cssCache.enqueue).drain,
+//       in.subscribe(100).filter(i => i.`type` == WebDev.CSS).observe(log("enqueuing")).to(cssCache.enqueue),
+       socket.reads(16, None)
          // The received css from node is separated by `>>>`, we split the chunks here ...
         .through(text.utf8Decode andThen CssSerializer.splitCssChunks)
-        .zip(
-          cssCache.dequeue
-        ).flatMap { t =>
+//        .zip {
+//          cssCache.dequeue
+//        }
+         .flatMap { t =>
 
-        val postProcessedSheet = t._1
-        val oldSheet = t._2
+//        val postProcessedSheet = t._1
+//        val oldSheet = t._2
 
-        Stream.eval( IO {
+        Stream.eval(IO {
+          if(null != infoCache){
 
-          println("updateing stylesheet: ")
-          println(oldSheet.id)
-          oldSheet.copy(
-            content = postProcessedSheet
-          )
+            println("not null")
+            infoCache.copy(
+              content = t
+            )
 
-        }).to(out.enqueue).drain
+          }
+           else
+            WebDev.createInit
+         })
 
-        }.to(log).drain
+        }.to(out.enqueue).drain
 
       ).join(3)
 

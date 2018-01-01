@@ -36,9 +36,11 @@ server.on('connection', function(socket) {
     var css = data; //.toString().replace(/(\r\n|\n|\r)/gm,"");
 
     // str.replace(/[^A-Za-z 0-9 \.,\?""!@#\$%\^&\*\(\)-_=\+;:<>\/\\\|\}\{\[\]`~]*/g, '')
-    console.log('received data as binary' + css.toString('hex'));
+//    console.log('received data as binary' + css.toString('hex'));
     
-    console.log('received data as text : ' + css);
+//    console.log('received data as text : ' + css);
+
+    console.log('received data ..');
 
     postcss( [ autoprefixer ({ browsers: ['last 4 version'] }) ] )
       .process(css).then(function(result){

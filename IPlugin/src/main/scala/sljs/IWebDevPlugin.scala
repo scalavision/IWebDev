@@ -80,9 +80,9 @@ object IWebDevPlugin extends AutoPlugin {
   }
 
   val sljsSettings = Seq(
-    outputJSPath := new java.io.File("."),
+    outputJSPath := (baseDirectory in run).value,
     outputJSFilename := {
-      Keys.name.value
+      Keys.name.value + ".js"
     },
     domNodeId := {
       Keys.name.value

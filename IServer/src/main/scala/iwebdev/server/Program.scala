@@ -41,12 +41,14 @@ object Program {
     webDevServer = new WebDevServer(infoInQ)
     nodeJSClient = new NodeJSClient(infoInQ, cssCache, fromNodeJSQ)
     webSocketServer = new WebSocketServer(webClientStream, fromNodeJSQ, infoInQ)
+    fileSaver = new FileSaver(infoInQ, fromNodeJSQ)
 
     infoStream <-  Stream(
       webDevServer.stream,
       nodeJSClient.stream,
-      webSocketServer.stream
-    ).join(3)
+      webSocketServer.stream,
+      fileSaver.stream
+    ).join(4)
 
   } yield infoStream
 

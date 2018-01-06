@@ -75,19 +75,24 @@ object NodeRenderer {
         // We need to remove old javascript dom, could try to find faster
         // more unsafe ways of doing this (with respect to memleaks)
 
-        val application = document.getElementById("application").parentNode
+        val application = document.getElementById("application")
 
-        application.childNodes.toIterable.foreach { n =>
-          if(n.isInstanceOf[HTMLElement] && n.asInstanceOf[HTMLElement].id == "application")
-            application.removeChild(n)
+        println("cleaning up the old application")
+
+        while(application.hasChildNodes()){
+          application.childNodes.toIterable.foreach { n =>
+           if(n.isInstanceOf[Node]) {
+             application.removeChild(n)
+           }
         }
 
-//        document.body.childNodes.foreach { n =>
-//          if(n.isInstanceOf[Node] && !n.isInstanceOf[HTMLScriptElement])
-//            document.body.removeChild(n)
-//          else
-//            println(n)
-//        }
+//          if(n.isInstanceOf[HTMLElement]) {
+//            println("removing node: " + n.asInstanceOf[HTMLElement].textContent)
+//            application.removeChild(n)
+//          }
+        }
+
+        println("the only thing left is now the application id dom node")
 
         updateDomNode()
         createElement()

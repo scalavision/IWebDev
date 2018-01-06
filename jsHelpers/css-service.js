@@ -8,7 +8,9 @@ var map = require('map-stream');
 var vfs = require('vinyl-fs');
 var streamify = require('streamify-string');
 var postcss = require('postcss');
+var cssbeautify = require('cssbeautify');
 
+console.log(cssbeautify);
 
 server.listen(5000, function() {
   console.log('Telnet server is running on port', server.address().port); 
@@ -42,16 +44,32 @@ server.on('connection', function(socket) {
 
     console.log('received data ..');
 
+
     postcss( [ autoprefixer ({ browsers: ['last 4 version'] }) ] )
-      .process(css).then(function(result){
+      .process(css).then(function(result) {
+
           result.warnings().forEach(function (warn) {
             console.warn(warn.toString());
           }); 
 
-          var postProcessedCss = result.css + "<<<"
+          console.log('css: ' + result.css);
+
+          var beautified = cssbeautify(result.css,{
+            indent: '  ',
+            openbrace: 'end-of-line',
+            autosemicolon: true
+          });
+
+          console.log('beautified' + beautified);
+
+          var postProcessedCss = beautified + "<<<";
+
           console.log("result: " + postProcessedCss);
+
           var status = socket.write(postProcessedCss, 'utf8', afterSend);
+
           console.log('did it write all?' + status);
+
     });
 
   });

@@ -4,7 +4,11 @@ import java.lang.Thread.UncaughtExceptionHandler
 import java.nio.channels.AsynchronousChannelGroup
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
-import fs2.Scheduler
+
+import cats.effect.IO
+import fs2.{Scheduler, Sink}
+import iwebdev.model.WebDev
+
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
@@ -60,6 +64,12 @@ object Resources {
       mkThreadFactory("fs2-http-spec-AG", daemon = true)
     )
   )
+
+  def logger(prefix: String): Sink[IO, WebDev.Info] = _.evalMap { i =>
+    IO {
+      println(s"$prefix > ${i.id}")
+    }
+  }
 
   def shutdown(): Unit = {
     println("shutting down!")

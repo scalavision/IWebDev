@@ -4,8 +4,7 @@ import iwebdev.model.WebDev
 import iwebdev.model.WebDev.Info
 import org.scalajs.dom.ext._
 import org.scalajs.dom.{Text, document}
-import org.scalajs.dom.raw.HTMLScriptElement
-import org.scalajs.dom.raw.{HTMLElement, Node}
+import org.scalajs.dom.raw.{HTMLElement, HTMLScriptElement, HTMLStyleElement, Node}
 
 /**
   * Initializing, and updating the inline Javascript and Css content
@@ -77,23 +76,13 @@ object NodeRenderer {
 
         val application = document.getElementById("application")
 
-        println("cleaning up the old application")
-
         while(application.hasChildNodes()){
           application.childNodes.toIterable.foreach { n =>
            if(n.isInstanceOf[Node]) {
              application.removeChild(n)
            }
+          }
         }
-
-//          if(n.isInstanceOf[HTMLElement]) {
-//            println("removing node: " + n.asInstanceOf[HTMLElement].textContent)
-//            application.removeChild(n)
-//          }
-        }
-
-        println("the only thing left is now the application id dom node")
-
         updateDomNode()
         createElement()
         node.setAttribute("hash", "hash-" + info.hash.toString)
@@ -102,6 +91,19 @@ object NodeRenderer {
       case c: WebDev.Css =>
         println("replacing css with dom node Id: " + c.id + " located at: " + c.outputPath)
         updateText()
+//        if(document.getElementById(c.id).isInstanceOf[HTMLStyleElement]) {
+//          updateText()
+//        } else {
+//          val p = document.getElementById(c.id)
+//
+//          while(p.hasChildNodes()){
+//            p.childNodes.toIterable.foreach { n =>
+//              p.removeChild(n)
+//            }
+//          }
+//          installHtmlElement()
+//        }
+
 
       case s: WebDev.SBTInfo =>
         //TODO: create a nice toaster maybe ???

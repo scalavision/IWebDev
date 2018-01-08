@@ -33,6 +33,8 @@ class WebSocketServer(
 
   implicit val codecString: Codec[String] = utf8
 
+
+
   // We join two streams, the styleSheets and javascript topics
   // These are pushed to the client, using Pickle for serialization
   // In order to handle websocket ping / pong, the frames probably
@@ -47,7 +49,7 @@ class WebSocketServer(
         Stream(
           styleSheets.dequeue,
           infoInQ.subscribe(100).filter(iQ => iQ.`type` != WebDev.CSS)
-        ).join(2).flatMap { s =>
+        ).join(2).observe(logger("pushing")).flatMap { s =>
           Stream.eval(IO { Frame.Text(Pickle.intoString(s)) })
         }
 

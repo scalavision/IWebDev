@@ -35,7 +35,7 @@ class WebDevServer(infoInQ: Topic[IO, Info]) {
   val stream: Stream[IO, Unit] =
     serverWithLocalAddress[IO](new InetSocketAddress(InetAddress.getByName(null), port)).flatMap {
       case Left(local) =>
-        println("binding .." + local)
+        println("binding webdev server .." + local)
         Stream.eval_(localBindAddress.complete(local))
       case Right(socketHandle) =>
         socketHandle.map { socket =>

@@ -64,7 +64,7 @@ server.on('connection', function(socket) {
 
           var postProcessedCss = beautified + "<<<";
 
-          console.log("result: " + postProcessedCss);
+//          console.log("result: " + postProcessedCss);
 
           var status = socket.write(postProcessedCss, 'utf8', afterSend);
 

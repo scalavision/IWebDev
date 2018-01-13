@@ -52,23 +52,19 @@ server.on('connection', function(socket) {
             console.warn(warn.toString());
           }); 
 
-          console.log('css: ' + result.css);
+          console.log('css prefixed');
 
-          var beautified = cssbeautify(result.css,{
+          var beautified = cssbeautify( result.css,{
             indent: '  ',
             openbrace: 'end-of-line',
             autosemicolon: true
           });
 
-          console.log('beautified' + beautified);
+          console.log('css beautified');
 
-          var postProcessedCss = beautified + "<<<";
+          var status = socket.write(beautified + "<<<", 'utf8', afterSend);
 
-//          console.log("result: " + postProcessedCss);
-
-          var status = socket.write(postProcessedCss, 'utf8', afterSend);
-
-          console.log('did it write all?' + status);
+          console.log('all written to buffer: ' + status);
 
     });
 

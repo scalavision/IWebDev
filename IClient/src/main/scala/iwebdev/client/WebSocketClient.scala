@@ -51,8 +51,6 @@ class WebSocketClient {
 
     socket.onmessage = { (e: dom.MessageEvent) =>
 
-      println("Got and update from Server!")
-
       e.data match {
         case s : String =>
           val info = Unpickle[Info].fromString(s).get

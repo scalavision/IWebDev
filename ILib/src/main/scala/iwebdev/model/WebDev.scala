@@ -22,7 +22,7 @@ object WebDev {
     hash: Int,
     outputPath: String,
     domElementIndex: Int,
-    content: String,
+    content: String
   )
 
   // TODO: go through this ADT and see if there are ways to simplify ..

@@ -13,6 +13,7 @@ object NodeRenderer {
 
   def apply(info: Info): Unit  = {
 
+    println("info recieved: " + " " + info.`type` + " " + info.id + " " + info.hash)
     val node = document.getElementById(info.id)
 
     def updateDomNode() = {

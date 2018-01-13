@@ -67,7 +67,7 @@ lazy val IClient = project.in(file("IClient"))
   .settings(
     scalaJSUseMainModuleInitializer := true,
     //artifactPath in (Compile, fastOptJS) := file("/Users/tomsorlie/IdeaProjects/Projects/MindPointer/Client"),
-    artifactPath in (Compile, fastOptJS) := file(System.getProperty("user.home") + "/IdeaProjects/Projects/MindPointer/Client/iclient-fastopt.js"),
+    artifactPath in (Compile, fastOptJS) := file(System.getProperty("user.home") + "/IdeaProjects/MindPointer/Client/iclient-fastopt.js"),
     libraryDependencies ++= Seq(
       "com.github.benhutchison" %%% "prickle" % "1.1.13",
       "org.scala-js" %%% "scalajs-dom" % "0.9.1",

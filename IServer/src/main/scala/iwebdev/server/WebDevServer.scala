@@ -39,7 +39,7 @@ class WebDevServer(infoInQ: Topic[IO, Info]) {
         Stream.eval_(localBindAddress.complete(local))
       case Right(socketHandle) =>
         socketHandle.map { socket =>
-          socket.reads(16).chunks.map(_.toArray).through(convertFromBytesToInfo).to(infoInQ.publish) ++
+          socket.reads(1024).chunks.map(_.toArray).through(convertFromBytesToInfo).to(infoInQ.publish) ++
             Stream.chunk(Chunk.bytes("Received Data".getBytes)).covary[IO].to(socket.writes()).drain.onFinalize(socket.endOfOutput)
         }
     }.joinUnbounded

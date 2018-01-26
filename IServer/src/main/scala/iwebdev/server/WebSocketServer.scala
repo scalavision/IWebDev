@@ -22,13 +22,13 @@ import iwebdev.model.WebDev.Info
   *
   * @param clientData Queueing up data from the web client
   * @param styleSheets Info of CSS type
-  * @param infoInQ All Incoming Info
+  * @param infoJsQ Info of JS type
   */
 
 class WebSocketServer(
   clientData: Queue[IO, String],
   styleSheets: Queue[IO, Info],
-  infoInQ: Topic[IO, Info]
+  infoJsQ: Topic[IO, Info]
 ) {
 
   implicit val codecString: Codec[String] = utf8
@@ -48,7 +48,7 @@ class WebSocketServer(
       } ).to(clientData.enqueue).drain ++
         Stream(
           styleSheets.dequeue,
-          infoInQ.subscribe(100).filter(iQ => iQ.`type` != WebDev.CSS)
+          infoJsQ.subscribe(100)
         ).join(2).observe(logger("pushing")).flatMap { s =>
           Stream.eval(IO { Frame.Text(Pickle.intoString(s)) })
         }

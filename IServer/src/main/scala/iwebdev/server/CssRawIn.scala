@@ -21,7 +21,7 @@ import iwebdev.model.WebDev.Info
   *
   * @param infoInQ  Handles all incoming Info packages
   */
-class WebDevServer(infoInQ: Topic[IO, Info]) {
+class CssRawIn(infoInQ: Topic[IO, Info]) {
 
   val port = 6000
   val localBindAddress = async.promise[IO, InetSocketAddress].unsafeRunSync()

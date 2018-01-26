@@ -33,22 +33,25 @@ import iwebdev.model.WebDev.Info
 object Program {
 
   def processInfoStream: Stream[IO, Unit] = for {
-    infoInQ <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
+    infoInCssQ <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
+    infoInJsQ <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
     cssCache <- Stream.eval(async.unboundedQueue[IO, Info])
     fromNodeJSQ <- Stream.eval(async.unboundedQueue[IO, Info])
     webClientStream <- Stream.eval(async.unboundedQueue[IO, String])
 
-    webDevServer = new WebDevServer(infoInQ)
-    nodeJSClient = new NodeJSClient(infoInQ, cssCache, fromNodeJSQ)
-    webSocketServer = new WebSocketServer(webClientStream, fromNodeJSQ, infoInQ)
-    fileSaver = new FileSaver(infoInQ, fromNodeJSQ)
+    jsDevServer = new JSRawIn(infoInJsQ)
+    cssDevServer = new CssRawIn(infoInCssQ)
+    nodeJSClient = new NodeJSClient(infoInCssQ, cssCache, fromNodeJSQ)
+    webSocketServer = new WebSocketServer(webClientStream, fromNodeJSQ, infoInJsQ)
+    fileSaver = new FileSaver(infoInCssQ, fromNodeJSQ)
 
     infoStream <-  Stream(
-      webDevServer.stream,
+      cssDevServer.stream,
+      jsDevServer.stream,
       nodeJSClient.stream,
       webSocketServer.stream,
       fileSaver.stream
-    ).join(4)
+    ).join(5)
 
   } yield infoStream
 

@@ -23,7 +23,7 @@ import iwebdev.server.Resources._
 /**
   * This sbt plugin is `WIP`. It takes the output from fastOptJS task wraps it
   * into a [[iwebdev.model.WebDev]] Info object and sends it to a
-  * running instance of Instant WebDev Server [[iwebdev.server.WebDevServer]]
+  * running instance of Instant WebDev Server [[iwebdev.server.CssRawIn]]
   * on port 6000.
   *
   * To use the plugin in your ScalaJS web client issue:
@@ -61,7 +61,7 @@ object IWebDevPlugin extends AutoPlugin {
 
   def sendToWebDevServer(info: WebDev.Info): Unit = {
 
-  val s = new Socket(InetAddress.getByName("localhost"), 6000)
+  val s = new Socket(InetAddress.getByName("localhost"), 6001)
   val out = new PrintStream(s.getOutputStream())
 
     out.write(

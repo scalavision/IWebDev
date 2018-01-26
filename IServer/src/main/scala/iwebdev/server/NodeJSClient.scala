@@ -58,6 +58,32 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
 
   }
 
+//  val stream: Stream[IO, Unit] =
+//    tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
+//
+//      in.subscribe(1).filter(i => i.`type` == WebDev.CSS).observe(log("caching")).flatMap { s =>
+//        Stream.chunk(Chunk.bytes((s"/*${s.id}*/" + s.content).getBytes()))
+//      }.to(socket.writes()) ++ socket.reads(16, None)
+//        // The received css from node is separated by `>>>`, we split the chunks here ...
+//        .through(text.utf8Decode andThen CssSerializer.splitCssChunks)
+//        .flatMap { t =>
+//
+//          Stream.eval(IO {
+//            if(null != infoCache){
+//
+//              infoCache.copy(
+//                content = t
+//              )
+//
+//            }
+//            else
+//              WebDev.createInit
+//          })
+//
+//        }.to(out.enqueue).drain
+//
+//    }
+
   val stream: Stream[IO, Unit] =
     tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
 
@@ -67,13 +93,16 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
         // We add the info id to top of stylesheet to be able to identify it when it returns
         in.subscribe(1).filter(i => i.`type` == WebDev.CSS).observe(log("caching")).flatMap { s =>
           Stream.chunk(Chunk.bytes((s"/*${s.id}*/" + s.content).getBytes()))
-        }.to(socket.writes()),
-        socket.reads(16, None)
+        }.to(socket.writes()).drain,
+
+        socket.reads(1024, None)
           // The received css from node is separated by `>>>`, we split the chunks here ...
           .through(text.utf8Decode andThen CssSerializer.splitCssChunks)
-          .flatMap { t =>
+          .evalMap { t =>
 
-            Stream.eval(IO {
+            println("recieved postprocessed css")
+
+            IO {
               if(null != infoCache){
 
                 infoCache.copy(
@@ -83,11 +112,11 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
               }
               else
                 WebDev.createInit
-            })
+            }
 
           }.to(out.enqueue).drain
 
-      ).join(3)
+      ).join(2)
 
     }
 

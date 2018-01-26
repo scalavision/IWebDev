@@ -54,7 +54,8 @@ class WebSocketClient {
       e.data match {
         case s : String =>
           val info = Unpickle[Info].fromString(s).get
-          NodeRenderer(info)
+          println("update recieved")
+          NodeRenderer.update(info)
 
         case b: Blob =>
           b.`type`

@@ -41,10 +41,10 @@ result back from node js.
 class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[IO, Info]) {
 
   type Id = String
-//  var infoCache: Map[Id, Info] = Map.empty[String, Info]
+  var infoCache: Map[Id, Info] = Map.empty[String, Info]
 
   // TODO: Implement with the Map above, use the comment of Info id to extract the correct returned postprocessed stylesheet
-  var infoCache: Info = null
+//  var infoCache: Info = null
 
   val localBindAddress =
     async.promise[IO, InetSocketAddress].unsafeRunSync()
@@ -53,36 +53,10 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
 
     IO {
       println(s"$prefix > " + s.id)
-      infoCache = s
+      infoCache += (s"/*${s.id}*/" -> s)
     }
 
   }
-
-//  val stream: Stream[IO, Unit] =
-//    tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
-//
-//      in.subscribe(1).filter(i => i.`type` == WebDev.CSS).observe(log("caching")).flatMap { s =>
-//        Stream.chunk(Chunk.bytes((s"/*${s.id}*/" + s.content).getBytes()))
-//      }.to(socket.writes()) ++ socket.reads(16, None)
-//        // The received css from node is separated by `>>>`, we split the chunks here ...
-//        .through(text.utf8Decode andThen CssSerializer.splitCssChunks)
-//        .flatMap { t =>
-//
-//          Stream.eval(IO {
-//            if(null != infoCache){
-//
-//              infoCache.copy(
-//                content = t
-//              )
-//
-//            }
-//            else
-//              WebDev.createInit
-//          })
-//
-//        }.to(out.enqueue).drain
-//
-//    }
 
   val stream: Stream[IO, Unit] =
     tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
@@ -100,18 +74,16 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
           .through(text.utf8Decode andThen CssSerializer.splitCssChunks)
           .evalMap { t =>
 
-            println("recieved postprocessed css")
-
             IO {
-              if(null != infoCache){
 
-                infoCache.copy(
-                  content = t
-                )
+            val id = t.lines.toList.head
+            println("recieved postprocessed css: " + id)
 
-              }
-              else
-                WebDev.createInit
+              val cssInfo = infoCache(id)
+              cssInfo.copy(
+                content = t
+              )
+
             }
 
           }.to(out.enqueue).drain

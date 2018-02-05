@@ -10,13 +10,13 @@ lazy val scalaSetup = Seq(
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-     "co.fs2" %% "fs2-core" % "0.10.0-M9",
-     "co.fs2" %% "fs2-io" % "0.10.0-M9",
-     "com.spinoco" %% "fs2-http" % "0.3.0-SNAPSHOT",
+     "co.fs2" %% "fs2-core" % "0.10.0",
+     "co.fs2" %% "fs2-io" % "0.10.0",
+     "com.spinoco" %% "fs2-http" % "0.3.0",
      "org.scodec" %% "scodec-bits" % "1.1.5",
      "org.scodec" %% "scodec-core" % "1.10.3",
-     "com.github.benhutchison" %% "prickle" % "1.1.13",
-     "org.scodec" %% "scodec-stream" % "1.1.0-M9",
+     "com.github.benhutchison" %% "prickle" % "1.1.14",
+     "org.scodec" %% "scodec-stream" % "1.1.0",
      "org.specs2" %% "specs2-core" % "4.0.0" % "test",
      "com.lihaoyi" %% "pprint" % "0.5.3"
    )
@@ -41,13 +41,13 @@ lazy val ICodec = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pur
     libraryDependencies ++= Seq(
      "org.scodec" %%% "scodec-bits" % "1.1.5",
      "org.scodec" %%% "scodec-core" % "1.10.3",
-     "com.github.benhutchison" %%% "prickle" % "1.1.13"
+     "com.github.benhutchison" %%% "prickle" % "1.1.14"
    ))
   .jvmSettings(
     libraryDependencies ++= Seq(
       "org.scodec" %% "scodec-bits" % "1.1.5",
       "org.scodec" %% "scodec-core" % "1.10.3",
-      "com.github.benhutchison" %% "prickle" % "1.1.13"
+      "com.github.benhutchison" %% "prickle" % "1.1.14"
     ))
   .dependsOn(ILib)
 
@@ -69,8 +69,8 @@ lazy val IClient = project.in(file("IClient"))
     //artifactPath in (Compile, fastOptJS) := file("/Users/tomsorlie/IdeaProjects/Projects/MindPointer/Client"),
     artifactPath in (Compile, fastOptJS) := file(System.getProperty("user.home") + "/IdeaProjects/MindPointer/Client/iclient-fastopt.js"),
     libraryDependencies ++= Seq(
-      "com.github.benhutchison" %%% "prickle" % "1.1.13",
-      "org.scala-js" %%% "scalajs-dom" % "0.9.1",
+      "com.github.benhutchison" %%% "prickle" % "1.1.14",
+      "org.scala-js" %%% "scalajs-dom" % "0.9.2",
       "org.scodec" %%% "scodec-bits" % "1.1.5",
       "com.lihaoyi" %%% "pprint" % "0.5.3"
     )

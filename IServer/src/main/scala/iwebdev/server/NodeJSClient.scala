@@ -56,6 +56,7 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
       infoCache += (s"/*${s.id}*/" -> s)
     }
 
+    
   }
 
   val stream: Stream[IO, Unit] =

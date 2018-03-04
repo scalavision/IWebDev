@@ -10,8 +10,8 @@ lazy val scalaSetup = Seq(
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-     "co.fs2" %% "fs2-core" % "0.10.1",
-     "co.fs2" %% "fs2-io" % "0.10.1",
+     "co.fs2" %% "fs2-core" % "0.10.2",
+     "co.fs2" %% "fs2-io" % "0.10.2",
      "com.spinoco" %% "fs2-http" % "0.3.0",
      "org.scodec" %% "scodec-bits" % "1.1.5",
      "org.scodec" %% "scodec-core" % "1.10.3",

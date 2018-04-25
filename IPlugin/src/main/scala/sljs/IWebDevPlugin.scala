@@ -46,6 +46,8 @@ object IWebDevPlugin extends AutoPlugin {
     val domNodeId = settingKey[String]("The javascript dom node id attribute, project name is used as default")
     val outputJSPath = settingKey[File]("Output path of the Javascript file, project root is used as default")
     val outputJSFilename = settingKey[String]("Output path of the Javascript file, project name is used as default")
+    val mainClassInApp = settingKey[String]("The main class to call form the ModuleInitializer.mainMethodWithArgs function")
+    val mainMethodOnMainClass = settingKey[String]("The main method to call on the main class in the ModuleInitializer.mainMethodWithArgs function")
     val saveJS = taskKey[Unit]("Save compiled javascript client to path, this is `WIP`")
     val pushToClient = taskKey[Unit]("Linking and then push compiled javascript to client using an Info object")
     val startDevServer = taskKey[Unit]("Start the instant webdev server, this is `WIP`")
@@ -83,6 +85,12 @@ object IWebDevPlugin extends AutoPlugin {
     outputJSPath := (baseDirectory in run).value,
     outputJSFilename := {
       Keys.name.value + ".js"
+    },
+    mainClassInApp := {
+      Keys.name.value
+    },
+    mainMethodOnMainClass := {
+      "main"
     },
     domNodeId := {
       Keys.name.value
@@ -157,7 +165,8 @@ object IWebDevPlugin extends AutoPlugin {
         irFiles.data,
         Seq(
           ModuleInitializer.mainMethodWithArgs(
-            "mp.client.MindPointer", "main"
+            mainClassInApp.value,
+            mainMethodOnMainClass.value
           )),
         output,
         scalaJSLogger

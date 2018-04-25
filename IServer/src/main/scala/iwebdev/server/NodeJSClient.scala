@@ -66,7 +66,7 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
       Stream(
         // reading from the topic, filtering out the initial topic, and using only the CSS `type`
         // We add the info id to top of stylesheet to be able to identify it when it returns
-        in.subscribe(1).filter(i => i.`type` == WebDev.CSS).observe(log("caching")).flatMap { s =>
+        in.subscribe(10).filter(i => i.`type` == WebDev.CSS).observe(log("caching")).flatMap { s =>
           Stream.chunk(Chunk.bytes((s"/*${s.id}*/" + s.content).getBytes()))
         }.to(socket.writes()).drain,
 

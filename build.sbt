@@ -2,7 +2,7 @@ import sbt.Keys._
 import sbtcrossproject.{crossProject, CrossType}
 
 lazy val scalaSetup = Seq(
-  scalaVersion := "2.12.4",
+  scalaVersion := "2.12.5",
   version := "0.1-SNAPSHOT",
   organization := "scalavision",
   scalacOptions in Test ++= Seq("-Yrangepos"),
@@ -10,20 +10,20 @@ lazy val scalaSetup = Seq(
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-     "co.fs2" %% "fs2-core" % "0.10.2",
-     "co.fs2" %% "fs2-io" % "0.10.2",
+     "co.fs2" %% "fs2-core" % "0.10.3",
+     "co.fs2" %% "fs2-io" % "0.10.3",
      "com.spinoco" %% "fs2-http" % "0.3.0",
      "org.scodec" %% "scodec-bits" % "1.1.5",
      "org.scodec" %% "scodec-core" % "1.10.3",
      "com.github.benhutchison" %% "prickle" % "1.1.14",
      "org.scodec" %% "scodec-stream" % "1.1.0",
-     "org.specs2" %% "specs2-core" % "4.0.0" % "test",
+     "org.specs2" %% "specs2-core" % "4.0.2" % "test",
      "com.lihaoyi" %% "pprint" % "0.5.3"
    )
 )
 
 lazy val LibSettings = Seq(
-  scalaVersion := "2.12.4"
+  scalaVersion := "2.12.5"
 )
 
 //lazy val ILib = project.in(file("ILib"))
@@ -72,7 +72,7 @@ lazy val IClient = project.in(file("IClient"))
     //  file(System.getProperty("user.home") + "/IdeaProjects/MindPointer/Client/iclient-fastopt.js"),
     libraryDependencies ++= Seq(
       "com.github.benhutchison" %%% "prickle" % "1.1.14",
-      "org.scala-js" %%% "scalajs-dom" % "0.9.2",
+      "org.scala-js" %%% "scalajs-dom" % "0.9.5",
       "org.scodec" %%% "scodec-bits" % "1.1.5",
       "com.lihaoyi" %%% "pprint" % "0.5.3"
     )
@@ -85,7 +85,7 @@ lazy val IPlugin = project.in(file("IPlugin"))
   .settings(commonSettings :_*)
   .settings(
     sbtPlugin := true,
-    addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.21")
+    addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.22")
   )
   .dependsOn(IServer, ILibJVM, ICodecJVM)
 

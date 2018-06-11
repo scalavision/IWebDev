@@ -2,7 +2,7 @@ import sbt.Keys._
 import sbtcrossproject.{crossProject, CrossType}
 
 lazy val scalaSetup = Seq(
-  scalaVersion := "2.12.4",
+  scalaVersion := "2.12.6",
   version := "0.2-SNAPSHOT",
   organization := "scalavision",
   scalacOptions in Test ++= Seq("-Yrangepos"),
@@ -10,8 +10,8 @@ lazy val scalaSetup = Seq(
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-     "co.fs2" %% "fs2-core" % "0.10.3",
-     "co.fs2" %% "fs2-io" % "0.10.3",
+     "co.fs2" %% "fs2-core" % "0.10.5",
+     "co.fs2" %% "fs2-io" % "0.10.5",
      "com.spinoco" %% "fs2-http" % "0.3.0",
      "org.scodec" %% "scodec-bits" % "1.1.5",
      "org.scodec" %% "scodec-core" % "1.10.3",
@@ -23,7 +23,7 @@ lazy val commonSettings = Seq(
 )
 
 lazy val LibSettings = Seq(
-  scalaVersion := "2.12.4"
+  scalaVersion := "2.12.6"
 )
 
 //lazy val ILib = project.in(file("ILib"))
@@ -85,7 +85,7 @@ lazy val IPlugin = project.in(file("IPlugin"))
   .settings(commonSettings :_*)
   .settings(
     sbtPlugin := true,
-    addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.21")
+    addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.22")
   )
   .dependsOn(IServer, ILibJVM, ICodecJVM)
 

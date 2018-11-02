@@ -3,14 +3,14 @@ package iwebdev.server
 import java.net.InetSocketAddress
 
 import cats.effect.IO
-import fs2.async.mutable.{Queue, Topic}
-import fs2.interop.scodec.ByteVectorChunk
 import fs2.io.tcp
-import fs2.{Chunk, Segment, Sink, Stream, async, text}
-import scodec.bits.ByteVector
-import iwebdev.model.WebDev
+import fs2.{Chunk, INothing, Pure, Sink, Stream}
 import iwebdev.model.WebDev.Info
 import Resources._
+import cats.effect.concurrent.Deferred
+import fs2.concurrent._
+import fs2.text
+import iwebdev.model.WebDev
 
 /**
   * This sends all Info CSS topics to node server that postprocesses the CSS
@@ -47,7 +47,7 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
 //  var infoCache: Info = null
 
   val localBindAddress =
-    async.promise[IO, InetSocketAddress].unsafeRunSync()
+    Deferred[IO, InetSocketAddress].unsafeRunSync()
 
   def log(prefix: String): Sink[IO, Info] = _.evalMap { s =>
 
@@ -59,7 +59,136 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
     
   }
 
-  val stream: Stream[IO, Unit] =
+  val client = tcp.client[IO](new InetSocketAddress("127.0.0.1",5000))
+
+  val message: Chunk[Byte] = Chunk.bytes("fs2.rocks".getBytes)
+
+  val stream: Stream[IO, Unit] = Stream.eval(localBindAddress.get).flatMap { local =>
+    Stream.resource(fs2.io.tcp.client[IO](local)).flatMap { socket =>
+      val dataOut: Stream[IO, Chunk[Byte]] = in.subscribe(10).map { info =>
+        Chunk.bytes((s"/*${info.id}*/" + info.content).getBytes())
+      }
+      println("Starting the node js client stuff ...")
+      dataOut
+        .map(socket.write(_))
+        .drain.onFinalize(socket.endOfOutput) ++
+        socket.reads(1024, None).through(text.utf8Decode andThen CssSerializer.splitCssChunks).evalMap { t =>
+          IO {
+            val id = t.lines.toList.head
+            println("recieved postprocessed css: " + id)
+            val cssInfo = infoCache(id)
+            cssInfo.copy( content = t )
+          }
+
+        }.to(out.enqueue).drain
+
+    }
+  }.drain
+
+  val stream2: Stream[IO, Array[Byte]] = Stream.eval(localBindAddress.get).flatMap { local =>
+    Stream.resource(fs2.io.tcp.client[IO](local)).flatMap { socket =>
+      val dataOut: Stream[IO, Chunk[Byte]] = in.subscribe(10).map { info =>
+        Chunk.bytes((s"/*${info.id}*/" + info.content).getBytes())
+      }
+
+      dataOut
+        .map(socket.write(_))
+        .drain.onFinalize(socket.endOfOutput) ++
+        socket.reads(1024, None).chunks.map(_.toArray)
+
+    }
+  }
+
+//
+//  val test2 : Stream[IO, Array[Byte]] = {
+//    Stream
+//      .range(0, 2)
+//      .map { idx =>
+//        Stream.eval(localBindAddress.get).flatMap { local =>
+//          Stream.resource(fs2.io.tcp.client[IO](local)).flatMap { socket =>
+//            val dataChunk: Stream[Array, Byte] = Stream.chunk(message)
+//
+//            val dataFlow: Stream[IO, Chunk[Byte]] = in.subscribe(10).map(_.toString.getBytes()).map(Chunk.bytes)
+//
+//            val dataFlow2: Stream[IO, Chunk[Byte]] = in.subscribe(10).map { info =>
+//              Chunk.bytes((s"/*${info.id}*/" + info.content).getBytes())
+//            }
+//
+//            dataFlow2.flatMap { c =>
+//              socket.write(c)
+//              Stream(c)
+//            }
+//
+//            dataFlow2.map(socket.write(_)).drain.onFinalize(socket.endOfOutput) ++ socket.reads(1024, None).chunks.map(_.toArray)
+//
+////              dataFlow2.map(Stream.eval).flatMap(_.to(socket.writes()))
+//              Stream.chunk(message).to(socket.writes()).drain
+//              .onFinalize(socket.endOfOutput) ++
+//              socket.reads(1024, None).through(text.utf8Decode andThen CssSerializer.splitCssChunks).chunks.map(_.toArray)
+//
+//          }
+//
+//        }
+//      }
+//      .parJoin(10)
+//  }
+
+    /*
+    Stream.resource(tcp.client[IO](new InetSocketAddress("127.0.0.1",5000))).flatMap { socket =>
+      val toNode: Stream[IO, Array[Byte]] = in.subscribe(10)
+        .filter(i => i.`type` == WebDev.CSS).map(info => (s"/*${info.id}*/" + info.content).getBytes())
+        //.map( info => Chunk.bytes((s"/*${info.id}*/" + info.content).getBytes())).map(_.toArray)
+
+      val chunks: Stream[IO, Array[Byte]] = in.subscribe(10).map(_.toString().getBytes()) //.to(socket.writes())
+
+      toNode.map(b => Array(b)).through(socket.writes()).last.onFinalize(socket.endOfOutput) ++ socket.reads(1024, None).chunks.map(_.toArray)
+
+  }*/
+
+//  val stream = Stream[IO, Array[Byte]] = {
+//    Stream
+//      .range(0, 1)
+//      .map { idx =>
+//        Stream.eval(localBindAddress.get).flatMap { local =>
+//          Stream.resource(client[IO](local)).flatMap { socket =>
+//            in.subscribe(10).filter(i => i.`type` == WebDev.CSS).observe(log("caching")).flatMap { s =>
+//              Stream.chunk(Chunk.bytes((s"/*${s.id}*/" + s.content).getBytes()))
+//            }.to(socket.writes())
+//              .drain
+//              .onFinalize(socket.endOfOutput) ++
+//              socket.reads(1024, None) // The received css from node is separated by `>>>`, we split the chunks here ...
+//              .through(text.utf8Decode andThen CssSerializer.splitCssChunks)
+//              .evalMap { t =>
+//
+//                IO {
+//
+//                  val id = t.lines.toList.head
+//                  println("recieved postprocessed css: " + id)
+//
+//                  val cssInfo = infoCache(id)
+//                  cssInfo.copy(
+//                    content = t
+//                  )
+//
+//                }
+//
+//              }.to(out.enqueue).drain
+//          }
+//        }
+//      }
+//
+//  }.parJoin(10)
+
+
+  //  val stream: Stream[IO, Unit] =
+//    tcp.client[IO](new InetSocketAddress("127.0.0.1",5000)).flatMap { socket =>
+//
+//      Stream(
+//
+//      ).drain
+//    }
+
+    /*
     tcp.client[IO](new InetSocketAddress("127.0.0.1", 5000)).flatMap { socket =>
 
       // We create a Stream of all the socket side effects, and caching of the Info object
@@ -89,9 +218,9 @@ class NodeJSClient (in: Topic[IO, Info], cssCache: Queue[IO, Info], out: Queue[I
 
           }.to(out.enqueue).drain
 
-      ).join(2)
+      ).parJoin(2)
 
-    }
+    }*/
 
 
   //  def log(prefix: String): Sink[IO, Info] = _.evalMap { s =>

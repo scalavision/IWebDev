@@ -2,28 +2,28 @@ import sbt.Keys._
 import sbtcrossproject.{crossProject, CrossType}
 
 lazy val scalaSetup = Seq(
-  scalaVersion := "2.12.6",
-  version := "0.2-SNAPSHOT",
+  scalaVersion := "2.12.7",
+  version := "0.4-SNAPSHOT",
   organization := "scalavision",
   scalacOptions in Test ++= Seq("-Yrangepos"),
 )
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-     "co.fs2" %% "fs2-core" % "0.10.5",
-     "co.fs2" %% "fs2-io" % "0.10.5",
-     "com.spinoco" %% "fs2-http" % "0.3.0",
-     "org.scodec" %% "scodec-bits" % "1.1.5",
-     "org.scodec" %% "scodec-core" % "1.10.3",
+     "co.fs2" %% "fs2-core" % "1.0.0",
+     "co.fs2" %% "fs2-io" % "1.0.0",
+     "com.spinoco" %% "fs2-http" % "0.4.0",
+     "org.scodec" %% "scodec-bits" % "1.1.6",
+     "org.scodec" %% "core" % "1.10.4",
      "com.github.benhutchison" %% "prickle" % "1.1.14",
-     "org.scodec" %% "scodec-stream" % "1.1.0",
-     "org.specs2" %% "specs2-core" % "4.0.2" % "test",
+     "org.scodec" %% "scodec-stream" % "1.2.0",
+     "org.specs2" %% "specs2-core" % "4.3.4" % "test",
      "com.lihaoyi" %% "pprint" % "0.5.3"
    )
 )
 
 lazy val LibSettings = Seq(
-  scalaVersion := "2.12.6"
+  scalaVersion := "2.12.7"
 )
 
 //lazy val ILib = project.in(file("ILib"))
@@ -39,14 +39,14 @@ lazy val ICodec = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pur
   .settings(scalaSetup :_*)
   .jsSettings(
     libraryDependencies ++= Seq(
-     "org.scodec" %%% "scodec-bits" % "1.1.5",
-     "org.scodec" %%% "scodec-core" % "1.10.3",
+     "org.scodec" %%% "scodec-bits" % "1.1.6",
+     "org.scodec" %%% "core" % "1.10.4",
      "com.github.benhutchison" %%% "prickle" % "1.1.14"
    ))
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "org.scodec" %% "scodec-bits" % "1.1.5",
-      "org.scodec" %% "scodec-core" % "1.10.3",
+      "org.scodec" %% "scodec-bits" % "1.1.6",
+      "org.scodec" %% "core" % "1.10.4",
       "com.github.benhutchison" %% "prickle" % "1.1.14"
     ))
   .dependsOn(ILib)
@@ -73,7 +73,7 @@ lazy val IClient = project.in(file("IClient"))
     libraryDependencies ++= Seq(
       "com.github.benhutchison" %%% "prickle" % "1.1.14",
       "org.scala-js" %%% "scalajs-dom" % "0.9.5",
-      "org.scodec" %%% "scodec-bits" % "1.1.5",
+      "org.scodec" %%% "scodec-bits" % "1.1.6",
       "com.lihaoyi" %%% "pprint" % "0.5.3"
     )
   )
@@ -85,7 +85,7 @@ lazy val IPlugin = project.in(file("IPlugin"))
   .settings(commonSettings :_*)
   .settings(
     sbtPlugin := true,
-    addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.22")
+    addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.25")
   )
   .dependsOn(IServer, ILibJVM, ICodecJVM)
 

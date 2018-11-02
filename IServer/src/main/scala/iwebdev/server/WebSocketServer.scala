@@ -3,7 +3,6 @@ package iwebdev.server
 import java.net.InetSocketAddress
 
 import cats.effect.IO
-import fs2.async.mutable.{Queue, Topic}
 import fs2.{Pipe, Stream}
 import prickle._
 import scodec.Codec
@@ -12,7 +11,7 @@ import spinoco.fs2.http
 import spinoco.fs2.http.websocket
 import spinoco.fs2.http.websocket.Frame
 import Resources._
-import iwebdev.model.WebDev
+import fs2.concurrent.{Queue, Topic}
 
 import scala.concurrent.duration._
 import iwebdev.model.WebDev.Info
@@ -49,7 +48,7 @@ class WebSocketServer(
         Stream(
           styleSheets.dequeue,
           infoJsQ.subscribe(100)
-        ).join(2).observe(logger("pushing")).flatMap { s =>
+        ).parJoin(2).flatMap { s =>
           Stream.eval(IO { Frame.Text(Pickle.intoString(s)) })
         }
 

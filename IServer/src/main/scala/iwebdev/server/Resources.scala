@@ -1,15 +1,25 @@
 package iwebdev.server
 
+//import java.lang.Thread.UncaughtExceptionHandler
+//import java.nio.channels.AsynchronousChannelGroup
+//import java.util.concurrent.atomic.AtomicInteger
+//import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
+//
+//import cats.effect.IO
+//import fs2.{Sink}
+//import iwebdev.model.WebDev
+//
+//import scala.concurrent.ExecutionContext
+//import scala.util.control.NonFatal
+
 import java.lang.Thread.UncaughtExceptionHandler
 import java.nio.channels.AsynchronousChannelGroup
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
+import java.util.concurrent.{Executors, ThreadFactory}
 
-import cats.effect.IO
-import fs2.{Scheduler, Sink}
-import iwebdev.model.WebDev
+import cats.effect.{Concurrent, ContextShift, IO, Timer}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.control.NonFatal
 
 /**
@@ -20,6 +30,40 @@ import scala.util.control.NonFatal
   */
 
 object Resources {
+
+  def mkThreadFactory(name: String, daemon: Boolean, exitJvmOnFatalError: Boolean = true): ThreadFactory = {
+    new ThreadFactory {
+      val idx = new AtomicInteger(0)
+      val defaultFactory = Executors.defaultThreadFactory()
+      def newThread(r: Runnable): Thread = {
+        val threadFromDefaultfactory= defaultFactory.newThread(r)
+        threadFromDefaultfactory.setName(s"$name-${idx.incrementAndGet()}")
+        threadFromDefaultfactory.setDaemon(daemon)
+        threadFromDefaultfactory.setUncaughtExceptionHandler(new UncaughtExceptionHandler {
+          def uncaughtException(t: Thread, e: Throwable): Unit = {
+            ExecutionContext.defaultReporter(e)
+            if (exitJvmOnFatalError) {
+              e match {
+                case NonFatal(_) => ()
+                case fatal => System.exit(-1)
+              }
+            }
+          }
+        })
+        threadFromDefaultfactory
+      }
+    }
+  }
+
+
+  implicit val _cxs: ContextShift[IO] = IO.contextShift(ExecutionContext.Implicits.global)
+  implicit val _timer: Timer[IO] = IO.timer(ExecutionContext.Implicits.global)
+  implicit val _concurrent: Concurrent[IO] = IO.ioConcurrentEffect(_cxs)
+  implicit val AG: AsynchronousChannelGroup = AsynchronousChannelGroup.withThreadPool(Executors.newCachedThreadPool(mkThreadFactory("fs2-http-spec-AG", daemon = true)))
+  implicit val blockingExecutionContext: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(2))
+
+
+  /*
 
   def mkThreadFactory(name: String, daemon: Boolean, exitJvmOnFatalError: Boolean = true): ThreadFactory = {
     new ThreadFactory {
@@ -79,5 +123,6 @@ object Resources {
     println("has shutdown: " + AG.isShutdown())
     println("has terminated: " + AG.isTerminated())
   }
+  */
 
 }

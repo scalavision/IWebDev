@@ -30,21 +30,25 @@ class CssRawIn(infoInQ: Topic[IO, Info]) {
     Deferred[IO, InetSocketAddress].unsafeRunSync()
 
   val convertFromBytesToInfo: Pipe[IO, Array[Byte], WebDev.Info] = s => InfoDecoder.streamDecoder.decode[IO] {
+
     toLazyBitVector {
       s.map { bb => BitVector.apply(bb) }
     }
   }
 
   val stream: Stream[IO, Unit] =
-    serverWithLocalAddress[IO](new InetSocketAddress(InetAddress.getByName(null), 0)).flatMap {
+    serverWithLocalAddress[IO](new InetSocketAddress(InetAddress.getByName(null), port)).flatMap {
       case Left(local) =>
-        println("binding webdev server .." + local)
+        println("binding webdev server for css input .." + local)
         Stream.eval_(localBindAddress.complete(local))
       case Right(socketHandle) =>
+        println("got a chunk of data ..")
         Stream.resource(socketHandle).map { socket =>
           socket.reads(1024)
             .chunks.map(_.toArray).through(convertFromBytesToInfo).to(infoInQ.publish) ++
-            Stream.chunk(Chunk.bytes("Received Data".getBytes)).covary[IO].to(socket.writes()).drain.onFinalize(socket.endOfOutput)
+            Stream.chunk(Chunk.bytes("Received Data".getBytes))
+              .covary[IO].to(socket.writes())
+              .drain.onFinalize(socket.endOfOutput)
         }
     }.parJoinUnbounded
 }

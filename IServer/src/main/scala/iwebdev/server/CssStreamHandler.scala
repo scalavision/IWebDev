@@ -77,12 +77,13 @@ object CssStreamHandler {
     }
 
     def go(buffer: Vector[String], pendingLineFeed: Boolean, s: Stream[F, String]): Pull[F, String, Option[Unit]] = {
-      s.pull.unconsChunk.flatMap {
+
+      s.pull.uncons.flatMap {
         case Some((chunk, s)) =>
 //          println("got some ...")
 //          pprint.pprintln(chunk.toString())
           val (toOutput, newBuffer, newPendingLineFeed) = extractLines(buffer, chunk, pendingLineFeed)
-          Pull.output(toOutput.toSegment) >> go(newBuffer, newPendingLineFeed, s)
+          Pull.output(toOutput) >> go(newBuffer, newPendingLineFeed, s)
         case None if buffer.nonEmpty => Pull.output1(buffer.mkString) >> Pull.pure(None)
         case None => Pull.pure(None)
       }

@@ -2,8 +2,11 @@ package iwebdev.server
 
 import cats.effect.IO
 import fs2._
+import fs2.concurrent._
 import iwebdev.model.WebDev
 import Resources._
+
+import fs2.concurrent.Topic
 import iwebdev.model.WebDev.Info
 
 /**
@@ -33,11 +36,12 @@ import iwebdev.model.WebDev.Info
 object Program {
 
   def processInfoStream: Stream[IO, Unit] = for {
-    infoInCssQ <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
-    infoInJsQ <- Stream.eval(async.topic[IO, Info](WebDev.createInit))
-    cssCache <- Stream.eval(async.unboundedQueue[IO, Info])
-    fromNodeJSQ <- Stream.eval(async.unboundedQueue[IO, Info])
-    webClientStream <- Stream.eval(async.unboundedQueue[IO, String])
+    infoInCssQ <- Stream.eval(Topic[IO, Info](WebDev.createInit))
+    infoInJsQ <- Stream.eval(Topic[IO, Info](WebDev.createInit))
+    cssCache <- Stream.eval(Queue.unbounded[IO, Info])
+//    fromNodeJSQ <- Stream.eval(async.unboundedQueue[IO, Info])
+    fromNodeJSQ <- Stream.eval(Queue.unbounded[IO, Info])
+    webClientStream <- Stream.eval(Queue.unbounded[IO, String])
 
     jsDevServer = new JSRawIn(infoInJsQ)
     cssDevServer = new CssRawIn(infoInCssQ)
@@ -51,7 +55,7 @@ object Program {
       nodeJSClient.stream,
       webSocketServer.stream,
       fileSaver.stream
-    ).join(5)
+    ).parJoin(5)
 
   } yield infoStream
 

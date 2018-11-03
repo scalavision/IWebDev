@@ -185,7 +185,7 @@ object IWebDevPlugin extends AutoPlugin {
     startDevServer := {
 //      log.info("The Instant WebDev Server support is still WIP ..")
       log.info("staring Instant WebDev Server ..")
-      Program.processInfoStream.run.unsafeRunAsync(println)
+      Program.processInfoStream.compile.drain.unsafeRunAsync(println)
       log.info("Instant WebDev Server has started ..")
     }
 
